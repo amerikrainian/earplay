@@ -684,9 +684,13 @@ namespace Earplay.Core.UI
                 return true;
             }
 
-            // First/last along the vertical axis of the current structure. Already there, or nothing
+            // In a horizontal row: its first/last item (the board's first/last column). Elsewhere,
+            // first/last along the vertical axis of the current structure. Already there, or nothing
             // wired that way: not consumed, so the screen may answer the key itself.
-            var move = _graph.MoveToEdge(first ? GraphDir.Up : GraphDir.Down);
+            var axis = focusNode.InRow
+                ? (first ? GraphDir.Left : GraphDir.Right)
+                : (first ? GraphDir.Up : GraphDir.Down);
+            var move = _graph.MoveToEdge(axis);
             if (move.Moved) AnnounceMove(move);
             return move.Moved;
         }

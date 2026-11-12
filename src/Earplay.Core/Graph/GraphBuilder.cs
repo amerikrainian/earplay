@@ -535,6 +535,7 @@ namespace Earplay.Core.Graph
                     for (int pos = 0; pos < row.Items.Count; pos++)
                     {
                         var node = row.Items[pos];
+                        node.InRow = row.Items.Count > 1;
                         if (r > 0)
                             node.Transitions[GraphDir.Up] = new Transition(VerticalTarget(row, rows[r - 1], pos));
                         if (r < rows.Count - 1)

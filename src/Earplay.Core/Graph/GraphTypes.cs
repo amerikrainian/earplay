@@ -249,6 +249,11 @@ namespace Earplay.Core.Graph
         /// stops in first-appearance order, landing on the stop's remembered position.</summary>
         public object StopKey;
 
+        /// <summary>Whether the node is a member of a horizontal row of two or more
+        /// (<see cref="GraphBuilder.StartRow"/>): Home/End then go to the row's first/last item, not the
+        /// stop's.</summary>
+        public bool InRow;
+
         /// <summary>The region (within a stop) this node belongs to, or null. Ctrl+Up/Down jumps between
         /// regions in first-appearance order.</summary>
         public object RegionKey;
