@@ -113,6 +113,11 @@ namespace Earplay.Core.Strings
             // Screen names, spoken on entering a screen.
             D("screen.main_menu", "Main menu"),
             D("screen.help", "Keys here"),
+            // The level select, which draws no title of its own.
+            D("screen.level_select", "Level select"),
+            // A mode tile on the level select: locked until Easy Mode is beaten; beaten (gold).
+            D("level.locked", "locked"),
+            D("level.completed", "completed"),
             // The main menu's caption-less icon buttons.
             D("title.options", "Options"),
             D("title.full_screen", "Full screen"),
@@ -302,6 +307,9 @@ namespace Earplay.Core.Strings
             => Has("bind." + actionKey) ? Get("bind." + actionKey) : fallback;
 
         public static string ScreenMainMenu => Get("screen.main_menu");
+        public static string ScreenLevelSelect => Get("screen.level_select");
+        public static string LevelLocked => Get("level.locked");
+        public static string LevelCompleted => Get("level.completed");
         public static string TitleOptions => Get("title.options");
         public static string TitleFullScreen => Get("title.full_screen");
         public static string ScreenHelp => Get("screen.help");
