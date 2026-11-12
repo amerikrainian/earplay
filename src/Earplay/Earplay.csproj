@@ -3,7 +3,8 @@
   <!--
     The BepInEx 5 plugin: the PERMANENT host. Engine + native glue only: the plugin entry, the Prism
     P/Invoke speech backend, the pump MonoBehaviour, the module loader (which loads Core + Module from
-    their bytes, renamed per generation), and the settings store. References BepInEx 5 + Harmony + Mono.Cecil, the game's Unity assemblies (Directory.Build.props),
+    their bytes, renamed per generation), the settings store, and the dev HTTP server with its Roslyn
+    REPL. References BepInEx 5 + Harmony + Mono.Cecil, the game's Unity assemblies (Directory.Build.props),
     and Contracts. NEVER references Core or Module at compile time (a compile-time reference would load
     Core by name into the AppDomain and break the per-generation identity split). Targets
     netstandard2.1, the profile the game itself is built against (Unity 2022.3 Mono).
@@ -15,6 +16,9 @@
     <Nullable>disable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>$(NoWarn);CS0436</NoWarn>
+    <!-- Copy NuGet runtime assemblies (Roslyn scripting) into the build output so DeployToGame ships
+         them beside the plugin. The game/loader refs are Private=false. -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <!-- The mod version lives in Directory.Build.props alone; this generates the BuildVersion constant. -->
@@ -53,6 +57,22 @@
   <ItemGroup>
     <!-- The per-generation rename of the reloadable pair (BepInEx ships Cecil). -->
     <Reference Include="$(BepInExDir)\core\Mono.Cecil.dll" Private="false" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <!-- In-process C# REPL for the dev /eval server (Roslyn scripting, netstandard2.0 build). -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.8.0" />
+    <!-- Roslyn's netstandard2.0 build binds System.Memory / System.Buffers / System.Numerics.Vectors by
+         assembly, which a netstandard2.1 restore treats as inbox and never copies; the game's Mono has
+         the types in mscorlib but not those assemblies. Runtime copies only (ExcludeAssets=compile), so
+         our own code still sees the netstandard Span. -->
+    <PackageReference Include="System.Memory" Version="4.5.5" ExcludeAssets="compile" />
+    <PackageReference Include="System.Buffers" Version="4.5.1" ExcludeAssets="compile" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" ExcludeAssets="compile" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" ExcludeAssets="compile" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' != 'Debug'">
+    <Compile Remove="Dev\**" />
   </ItemGroup>
 
   <!--

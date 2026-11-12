@@ -2,6 +2,7 @@ using System.IO;
 using BepInEx;
 using BepInEx.Logging;
 using Earplay.Contracts;
+using Earplay.Dev;
 using Earplay.Host;
 using Earplay.Modularity;
 using Earplay.Speech;
@@ -11,7 +12,7 @@ namespace Earplay
 {
     /// <summary>
     /// The permanent host: only what can never reload. Stands up Prism, the speech pipeline, the settings
-    /// store, the pump, and the module loader, then hands per-frame work to the
+    /// store, the dev server, the pump, and the module loader, then hands per-frame work to the
     /// reloadable side (Core + Module). No feature logic lives here.
     /// </summary>
     [BepInPlugin(Guid, Name, BuildVersion.Value)]
@@ -25,18 +26,22 @@ namespace Earplay
 
         private PrismBackend _prism;
         private ModuleLoader _loader;
+#if DEBUG
+        private DevServer _devServer;
+#endif
 
         private void Awake()
         {
             Log = Logger;
             Log.LogInfo($"{Name} {Version} loading");
 
-            // Headless runs set EARPLAY_NO_SPEECH=1 so an unattended session does not depend on a
-            // running screen reader: Prism init is skipped.
+            // Headless dev runs set EARPLAY_NO_SPEECH=1 so an unattended session does not depend on a
+            // running screen reader. Prism init is skipped; spoken text is still captured for /speech,
+            // since the dev tap is upstream of the backend.
             bool muteSpeech = System.Environment.GetEnvironmentVariable("EARPLAY_NO_SPEECH") == "1";
             _prism = new PrismBackend(Log);
             if (muteSpeech)
-                Log.LogInfo("Speech muted (EARPLAY_NO_SPEECH=1)");
+                Log.LogInfo("Speech muted (EARPLAY_NO_SPEECH=1); spoken text still captured for /speech");
             else
                 _prism.Initialize();
 
@@ -54,6 +59,13 @@ namespace Earplay
                 Path.Combine(pluginDir, "Earplay.Module.dll"),
                 host, Log);
 
+#if DEBUG
+            // Dev-only: the loopback server exposes a C# eval REPL; never in a player build. Started first
+            // so its speech tap catches the load line.
+            _devServer = new DevServer(_loader, Log);
+            _devServer.Start();
+#endif
+
             // The "loaded" line is the module's: it has the strings table. The module carries every
             // feature; if it fails to load the player would otherwise get silence with no signal, so
             // say so out loud (the cause is in the log).
@@ -66,6 +78,9 @@ namespace Earplay
             pumpObject.hideFlags = HideFlags.HideAndDontSave;
             DontDestroyOnLoad(pumpObject);
             HostPump.Loader = _loader;
+#if DEBUG
+            HostPump.DevServer = _devServer;
+#endif
             pumpObject.AddComponent<HostPump>();
 
             Log.LogInfo($"{Name} loaded");
