@@ -26,10 +26,11 @@ namespace Earplay.Contracts
             set => _store.SetBool("focus_mode_on_launch", value);
         }
 
-        /// <summary>Whether list items append their position ("3 of 10").</summary>
+        /// <summary>Whether list items append their position ("3 of 10"). Off by default: the menus are
+        /// short and the count is noise to an expert listener; the mod menu turns it on.</summary>
         public bool SpeakPositions
         {
-            get => _store.GetBool("speak_positions", true);
+            get => _store.GetBool("speak_positions", false);
             set => _store.SetBool("speak_positions", value);
         }
     }
