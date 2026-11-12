@@ -18,11 +18,11 @@ namespace Earplay.Module.Screens.Title
     /// the five are beaten; "CASUAL": Quick Play), then the page's Play and Back buttons. A tile is a
     /// letter on the screen; it reads by its mode's name from <c>LevelSelectScript.levelNames</c>, the
     /// list its index in <c>pickerTiles</c> addresses (the same index the tile's click hands to
-    /// <c>ChangeDetails</c>). Each group is a row, as drawn: Left/Right within it, Up/Down between
-    /// the groups and on to Play and Back. Landing on a tile selects it, as a click does (a locked one
-    /// too: the game then greys Play out), so the details panel follows focus and the tile reads its
-    /// description and record ("Not Yet Played", "Complete Easy Mode to Unlock") after its name. Since
-    /// the tile landed on is always the selected one, a tile says no "selected", as a tab does not; a
+    /// <c>ChangeDetails</c>). The groups sit side by side on one line, so all the tiles are one row,
+    /// as drawn: Left/Right walk it (crossing from Marathon into Casual names the group), Up/Down go
+    /// on to Play and Back. Landing on a tile selects it, as a click does (a locked one too: the game
+    /// then greys Play out), so the details panel follows focus and the tile reads selected, then its
+    /// description and record ("Not Yet Played", "Complete Easy Mode to Unlock") after its name; a
     /// locked tile says locked, and a beaten one (its gold overlay) says completed. Play starts the
     /// selected mode. Escape presses Back.
     /// </summary>
@@ -32,11 +32,6 @@ namespace Earplay.Module.Screens.Title
         public override string ScreenName => Strings.ScreenLevelSelect;
 
         public override bool IsActive() => TitlePages.Showing(TitleControl.TitleControlZone.LevelSelect);
-
-        // The tile last landed on in each group (by the group's object name): Up/Down into a row
-        // return to it. The selected tile cannot say this, since landing on another row's tile
-        // selects that one. Navigation memory, not game state.
-        private readonly Dictionary<string, int> _lastInRow = new Dictionary<string, int>();
 
         private static LevelSelectScript Script()
         {
@@ -58,42 +53,40 @@ namespace Earplay.Module.Screens.Title
             b.BeginStop("levels");
             // The groups in the page's order, each the tiles under it. A tile appears in pickerTiles
             // more than once (index 0 is an unused duplicate of Easy): the first index that is not the
-            // unused slot wins.
+            // unused slot wins. The groups sit side by side on one line (Casual right of Marathon), so
+            // their tiles are ONE row, each group a context the row crosses into: Left/Right walk all
+            // the tiles, Up/Down go on to Play, and a vertical move into the row lands on the
+            // selected tile (the last one landed on, since landing selects).
+            var groups = new List<(string caption, List<(Button tile, int id)> tiles)>();
             var picker = script.transform.Find("Picker");
-            if (picker != null)
+            for (int g = 0; picker != null && g < picker.childCount; g++)
             {
-                for (int g = 0; g < picker.childCount; g++)
+                var group = picker.GetChild(g);
+                if (!group.gameObject.activeInHierarchy) continue;
+                var members = new List<(Button tile, int id)>();
+                foreach (var tile in group.GetComponentsInChildren<Button>(false))
                 {
-                    var group = picker.GetChild(g);
-                    if (!group.gameObject.activeInHierarchy) continue;
-                    var row = new List<(Button tile, int id)>();
-                    foreach (var tile in group.GetComponentsInChildren<Button>(false))
-                    {
-                        int id = IndexOf(tiles, tile.gameObject);
-                        if (id > 0) row.Add((tile, id));
-                    }
-                    if (row.Count == 0) continue;
-                    var caption = FirstGroupLabel(group);
-                    b.PushContext(caption != null ? caption.text : group.name);
-                    // A group is a row, as drawn: Left/Right walk its tiles, Up/Down cross to the
-                    // next group (or Play), entering a row on the tile last landed on there, else
-                    // its selected one, else its first.
-                    string rowName = group.name;
-                    b.StartRow(entry: () =>
-                    {
-                        int target = _lastInRow.TryGetValue(rowName, out int last) ? last : Private.Get<int>(script, "currentID");
-                        return row.FindIndex(t => t.id == target);
-                    });
-                    foreach (var (tile, id) in row)
-                    {
-                        var vt = Tile(script, tile, id, gold, locks, description, record);
-                        var select = vt.OnFocus;
-                        vt.OnFocus = () => { _lastInRow[rowName] = id; select(); };
-                        b.AddItem(ControlId.Structural("levels:" + id), vt);
-                    }
-                    b.EndRow();
+                    int id = IndexOf(tiles, tile.gameObject);
+                    if (id > 0) members.Add((tile, id));
+                }
+                if (members.Count == 0) continue;
+                var caption = FirstGroupLabel(group);
+                groups.Add((caption != null ? caption.text : group.name, members));
+            }
+            if (groups.Count > 0)
+            {
+                var order = new List<int>();
+                foreach (var group in groups)
+                    foreach (var member in group.tiles) order.Add(member.id);
+                b.StartRow(entry: () => order.IndexOf(Private.Get<int>(script, "currentID")));
+                foreach (var group in groups)
+                {
+                    b.PushContext(group.caption);
+                    foreach (var (tile, id) in group.tiles)
+                        b.AddItem(ControlId.Structural("levels:" + id), Tile(script, tile, id, gold, locks, description, record));
                     b.PopContext();
                 }
+                b.EndRow();
             }
 
             var play = Private.Get<Button>(script, "playButton");
@@ -112,6 +105,7 @@ namespace Earplay.Module.Screens.Title
                 Announcements = new List<NodeAnnouncement>
                 {
                     GameNodes.LabelPart(name),
+                    GameNodes.SelectedPart(selected),
                     new NodeAnnouncement(() => Shown(locks, id) ? Strings.LevelLocked : null, kind: AnnouncementKinds.Value),
                     new NodeAnnouncement(() => Shown(gold, id) ? Strings.LevelCompleted : null, kind: AnnouncementKinds.Value),
                     // The details panel describes the selected mode, which landing has just made this one.
