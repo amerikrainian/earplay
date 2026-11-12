@@ -102,7 +102,7 @@ namespace Earplay.Module.Round
                     string name = Round.TileName(cell.Tile);
                     parts.Add(ModuleSettings.SpeakCoordinates ? Strings.CellAt(name, cell.Column, cell.Row) : name);
                 }
-            return parts.Count > 0 ? Strings.NewTiles(string.Join("; ", parts)) : null;
+            return parts.Count > 0 ? Strings.NewTiles(string.Join(", ", parts)) : null;
         }
 
         // The word's result, once the game has dealt the new tiles and redrawn the bar.

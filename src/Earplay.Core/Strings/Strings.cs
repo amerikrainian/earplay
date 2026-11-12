@@ -187,7 +187,7 @@ namespace Earplay.Core.Strings
             // {0} = the word the game refused.
             D("event.rejected", "{0}: not a word"),
             D("event.round_complete", "round complete"),
-            // The tiles a word's refill dealt; {0} = each with its coordinates, "E, 2 1; S, 3 2".
+            // The tiles a word's refill dealt; {0} = each (with its coordinates when on), "E, 2 1, S, 3 2".
             D("event.new_tiles", "new: {0}"),
             D("event.shuffled", "shuffled"),
             D("event.sorted", "sorted"),

@@ -369,7 +369,7 @@ as the same press (`TitlePages.Back`).
     is on ("C" interrupting, "C removed"); Harmony on `KeyboardControl.Update` ("no Z" when a
     typed letter found no tile), `SubmitWord.SubmitTheWord` (board noted), `WordWasNotAccepted`
     ("SMOE: not a word"), `ReturnToGame` / `LogicManagerScript.FinishRound` ("BREAD: 13", the score
-    line, "round complete", "new: E, 3 1; T, 4 2; ..." from the board diff, 15 frames on),
+    line, "round complete", "new: E, 3 1, T, 4 2, ..." from the board diff, 15 frames on),
     `LastWordArea.TutorialMessage` and `ShowSpecialRoundText` (the strip), `ShuffleTool.ShuffleTiles` /
     `SortTilesAlphabetically` ("shuffled" when tiles moved), `RefreshTool.RefreshAllTiles`
     ("refreshed, 4 left"). Verified live: BREAD typed, submitted, scored 13, five new tiles named.
