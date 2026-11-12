@@ -216,6 +216,7 @@ namespace Earplay.Core.Strings
             D("bind.round.closegaps", "Close gaps"),
             D("bind.round.word", "Jump to the word"),
             D("bind.round.submit", "Submit the word"),
+            D("bind.round.highlighted", "Jump to the highlighted tile"),
             // The key help's name for the Refresh key, which wants a second's hold.
             D("bind.round.refresh", "Refresh, held"),
             D("bind.ui.delete", "Return the tile to the board"),

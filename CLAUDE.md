@@ -356,7 +356,10 @@ as the same press (`TitlePages.Back`).
     move N there" (the tile's parent unchanged: the game sent it back). Verified live: a board swap and back, a drop into an empty slot, a cancel.
   - **Keys**: Backspace (every round node's secondary) the last tile out (`BackspaceButtonClick`, the
     game's LIFO list), Shift+Backspace the whole word (`BackspaceButtonHold`), Ctrl+Backspace close
-    gaps (`CloseAllGaps`), Shift+Enter submits from anywhere on the round (`PressedSubmitButton`, as
+    gaps (`CloseAllGaps`), Ctrl+H jumps to the special round's highlighted tile
+    (`GridManagerScript.mandatoryTile` while `mandatory`: its word slot when in the word, else its board
+    spot; offered, and so in F1, only while one is highlighted), Shift+Enter submits from anywhere on
+    the round (`PressedSubmitButton`, as
     Enter on the word or the Submit tool does), Escape the Options drawer (`TopDrawerManager.ToggleOptionsDrawer`). The
     game's tool keys are ours on the round (its Shuffle Tiles, Refresh Tiles, Type Wildcard and Insert
     Plus actions blocked), so F1 lists and runs them: 2 the shuffle tool's press (labelled Shuffle or

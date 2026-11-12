@@ -124,6 +124,8 @@ namespace Earplay.Module
             InputManager.Register(Round.RoundScreen.CloseGapsAction, "Close gaps", InputCategory.UI).AddBinding(new KeyboardBinding(KeyCode.Backspace, ctrl: true));
             // Alt+W: the word strip's first slot, from anywhere on the board.
             InputManager.Register(Round.RoundScreen.WordAction, "Jump to the word", InputCategory.UI).AddBinding(new KeyboardBinding(KeyCode.W, alt: true));
+            // Ctrl+H: the special round's highlighted tile.
+            InputManager.Register(Round.RoundScreen.HighlightedAction, "Jump to the highlighted tile", InputCategory.UI).AddBinding(new KeyboardBinding(KeyCode.H, ctrl: true));
             // Shift+Enter: submit the word from anywhere on the round.
             InputManager.Register(Round.RoundScreen.SubmitAction, "Submit the word", InputCategory.UI)
                 .AddBinding(new KeyboardBinding(KeyCode.Return, shift: true)).AddBinding(new KeyboardBinding(KeyCode.KeypadEnter, shift: true));

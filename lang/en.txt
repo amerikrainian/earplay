@@ -142,6 +142,7 @@ bind.round.clear=Clear the word
 bind.round.closegaps=Close gaps
 bind.round.word=Jump to the word
 bind.round.submit=Submit the word
+bind.round.highlighted=Jump to the highlighted tile
 bind.round.refresh=Refresh, held
 bind.ui.delete=Return the tile to the board
 bind.ui.drag=Pick up or drop a tile

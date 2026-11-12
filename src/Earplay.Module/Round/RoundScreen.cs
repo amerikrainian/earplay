@@ -40,6 +40,7 @@ namespace Earplay.Module.Round
         public const string PlusAction = "round.plus";
         public const string WordAction = "round.word";
         public const string SubmitAction = "round.submit";
+        public const string HighlightedAction = "round.highlighted";
 
         private const float RefreshHold = 1f;
 
@@ -95,6 +96,9 @@ namespace Earplay.Module.Round
             yield return new ElementAction(ClearAction, Strings.Get("bind.round.clear"), _ => ClearWord());
             yield return new ElementAction(WordAction, Strings.Get("bind.round.word"), _ => JumpToWord());
             yield return new ElementAction(SubmitAction, Strings.Get("bind.round.submit"), _ => Submit());
+            // Ctrl+H: the special round's highlighted tile, offered only while there is one.
+            if (Highlighted() != null)
+                yield return new ElementAction(HighlightedAction, Strings.Get("bind.round.highlighted"), _ => JumpToHighlighted());
             bool shuffleFirst = ToolsScript.Instance == null || ToolsScript.Instance.shuffle.defaultIsShuffle;
             yield return new ElementAction(ShuffleAction, shuffleFirst ? Strings.ToolShuffle : Strings.ToolSort, _ =>
             {
@@ -129,6 +133,33 @@ namespace Earplay.Module.Round
             if (slot >= Round.WordSlots().Count) slot = 0;
             if (key != null && key.StartsWith("word:", System.StringComparison.Ordinal)) return; // already there
             Navigation.MoveTo(ControlId.Structural("word:" + slot));
+        }
+
+        // The tile a "Word Must Include Highlighted Tile" round has highlighted, or null.
+        private static TileScript Highlighted()
+        {
+            var tile = GridManagerScript.Instance != null ? GridManagerScript.Instance.mandatoryTile : null;
+            return tile != null && tile.mandatory && !tile.fullySpent ? tile : null;
+        }
+
+        // Ctrl+H: land on the highlighted tile, its word slot when it is in the word, else its board
+        // spot (as a move).
+        private static void JumpToHighlighted()
+        {
+            var tile = Highlighted();
+            if (tile == null) return;
+            if (tile.tileIsInSubmissionQueue)
+            {
+                Navigation.MoveTo(ControlId.Structural("word:" + tile.positionOnSubmissionQueue));
+                return;
+            }
+            foreach (var row in Round.Board())
+                foreach (var cell in row)
+                    if (ReferenceEquals(cell.Tile, tile))
+                    {
+                        Navigation.MoveTo(ControlId.Structural("board:" + cell.Column + ":" + cell.Row));
+                        return;
+                    }
         }
 
         // A real key press holds a second before refreshing, as the game's own key does; a press with
