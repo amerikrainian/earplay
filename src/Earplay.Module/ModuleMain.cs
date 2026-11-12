@@ -167,6 +167,7 @@ namespace Earplay.Module
             // The round, and its modal panels over it.
             ScreenManager.Register(new Round.RoundScreen());
             ScreenManager.Register(new Round.BagScreen());
+            ScreenManager.Register(new Screens.Game.ShopScreen());
             ScreenManager.Register(new Screens.Game.OptionsDrawerScreen());
             ScreenManager.Register(new Screens.Game.TutorialScreen());
             ScreenManager.Register(new ModMenuScreen());

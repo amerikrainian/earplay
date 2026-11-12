@@ -369,6 +369,16 @@ as the same press (`TitlePages.Back`).
     ("refreshed, 4 left"). Verified live: BREAD typed, submitted, scored 13, five new tiles named.
   - The driver cannot type into the game: call the private `KeyboardControl.OnTextInput((char)'b')`
     through `/eval` (the game's own text-input handler), one letter at a time.
+- **Shop** (`Screens/Game/ShopScreen`, while `ShopManager.shopIsShowing` and the zone is Shop): its
+  title ("Round 1 Complete", `shopTitleText`) names the screen; ONE stop: the plays the round
+  brought ("+4 Plays", `livesOnNewRoundPop`), the cards (`upgradeCards`) as one row: kind, rarity,
+  description (`headerText`, `rarityText`, `myDescription`), an upgrade's uses
+  (`associatedBonus.UpgradeMaximum`, the dots), "All Modifier Slots Filled" when shown
+  (`allFilledGO`); the card's `additionalDescription` text is the control buffer; Enter buys
+  (`myButton` -> `BuyThisCard`). Then Re-Roll and Skip as drawn, caption then cost ("Re-Roll, -1
+  Plays": the "Left Text" first; `reRollButtonText` is the COST text), the letter bag (`BagScreen`),
+  the plays line. Peek (fades the shop to show the board) is left out. A re-roll reads the new cards
+  40 frames on. Not a keyboard lender: the game's keys are off in the shop.
 - **Bag** (`Round/BagScreen`, Enter on the Bag tool): `LetterBagManager.LetterBag` and `SpentLetters`
   (tile id strings: letter, type code S G D P F E T L, two digits of bonus points, two of special
   score) counted by how they read, "A, 1 point: 6"; a modal, Escape closes. The game's own drawer is

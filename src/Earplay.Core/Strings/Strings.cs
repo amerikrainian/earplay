@@ -193,6 +193,9 @@ namespace Earplay.Core.Strings
             D("event.sorted", "sorted"),
             // {0} = refreshes left.
             D("event.refreshed", "refreshed, {0} left"),
+            // The shop, when its title is missing; an upgrade card's uses ({0} = how many).
+            D("screen.shop", "Shop"),
+            D("shop.uses", "{0} uses"),
             // The letter bag: {0} = how many tiles.
             D("bag.remaining", "in the bag, {0}"),
             D("bag.spent", "spent this round, {0}"),
@@ -443,6 +446,8 @@ namespace Earplay.Core.Strings
         public static string Sorted => Get("event.sorted");
         public static string Refreshed(int left) => F("event.refreshed", left);
         public static string BagRemaining(int n) => F("bag.remaining", n);
+        public static string ScreenShop => Get("screen.shop");
+        public static string CardUses(int n) => F("shop.uses", n);
         public static string BagSpent(int n) => F("bag.spent", n);
         public static string PickedUp(string tile) => F("swap.picked", tile);
         public static string CantPickUp(string tile) => F("swap.cant_pick", tile);
