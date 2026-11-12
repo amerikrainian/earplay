@@ -441,8 +441,8 @@ namespace Earplay.Core.UI
                 {
                     var node = _graph?.CurrentNode;
                     if (node == null) return false;
-                    if (node.Vtable.OnDrag != null) { _graph.Drag(); return true; }
-                    Speak(Strings.Strings.NoDragTarget);
+                    // Nothing to drag here: consumed, silently.
+                    if (node.Vtable.OnDrag != null) _graph.Drag();
                     return true;
                 }
                 case UiActions.Delete:

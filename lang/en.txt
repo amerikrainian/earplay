@@ -37,7 +37,6 @@ edit.deleted={0} deleted
 nav.position={0} of {1}
 nav.no_tooltip=no description
 nav.no_details=no details
-drag.no_target=nothing to drag
 delete.no_target=nothing to remove
 nav.minimum=minimum
 nav.maximum=maximum

@@ -68,8 +68,7 @@ namespace Earplay.Core.Strings
             D("nav.position", "{0} of {1}"),
             D("nav.no_tooltip", "no description"),
             D("nav.no_details", "no details"),
-            // Drag (Backslash) and remove (Delete) with nothing under focus that takes them.
-            D("drag.no_target", "nothing to drag"),
+            // Remove (Delete) with nothing under focus that takes it.
             D("delete.no_target", "nothing to remove"),
             D("nav.minimum", "minimum"),
             D("nav.maximum", "maximum"),
@@ -380,7 +379,6 @@ namespace Earplay.Core.Strings
         public static string Position(int index, int count) => F("nav.position", index, count);
         public static string NoTooltip => Get("nav.no_tooltip");
         public static string NoDetails => Get("nav.no_details");
-        public static string NoDragTarget => Get("drag.no_target");
         public static string NoDeleteTarget => Get("delete.no_target");
         public static string Minimum => Get("nav.minimum");
         public static string Maximum => Get("nav.maximum");

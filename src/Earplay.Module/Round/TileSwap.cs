@@ -45,11 +45,7 @@ namespace Earplay.Module.Round
 
         private static void PickUp(TileScript tile)
         {
-            if (tile == null || tile.fullySpent)
-            {
-                Speech.Say(Strings.NoDragTarget, interrupt: true);
-                return;
-            }
+            if (tile == null || tile.fullySpent) return; // an empty spot: nothing to pick up, silently
             string name = Round.TileName(tile);
             if (tile.myType == SpecialTileManager.TileTypes.Locked || tile.stuckTile || tile.transparent || tile.tileIsMoving)
             {
