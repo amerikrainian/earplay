@@ -168,6 +168,7 @@ namespace Earplay.Module
             ScreenManager.Register(new Round.RoundScreen());
             ScreenManager.Register(new Round.BagScreen());
             ScreenManager.Register(new Screens.Game.ShopScreen());
+            ScreenManager.Register(new Round.PeekScreen());
             ScreenManager.Register(new Screens.Game.OptionsDrawerScreen());
             ScreenManager.Register(new Screens.Game.TutorialScreen());
             ScreenManager.Register(new ModMenuScreen());

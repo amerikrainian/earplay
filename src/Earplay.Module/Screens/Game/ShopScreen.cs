@@ -22,17 +22,20 @@ namespace Earplay.Module.Screens.Game
     /// description of what the card mentions (<c>additionalDescription</c>) is the control buffer.
     /// Enter buys (<c>BuyThisCard</c>: one purchase, then the next round). Then Re-Roll
     /// ("-1 Plays") and Skip ("+2 Refresh") as the game draws them, the letter bag (the mod's
-    /// <see cref="BagScreen"/>), and the plays line. Peek, which only fades the shop to show the board,
-    /// is left out. A re-roll reads the new cards once they are dealt.
+    /// <see cref="BagScreen"/>), Peek (the game's <c>TogglePeek</c>: the shop fades and the board shows,
+    /// read by <see cref="PeekScreen"/> until Escape brings the shop back), and the plays line. A
+    /// re-roll reads the new cards once they are dealt.
     /// </summary>
     public sealed class ShopScreen : Screen
     {
         public override string Key => "game.shop";
+        // A peek steps the shop aside: back from it, focus is where it was (on Peek).
+        public override bool KeepStateOnPop => true;
 
         private static ShopManager Shop()
         {
             var shop = ShopManager.Instance;
-            return shop != null && shop.shopIsShowing && shop.shopScreen != null && shop.shopScreen.activeInHierarchy ? shop : null;
+            return shop != null && shop.shopIsShowing && !shop.peeking && shop.shopScreen != null && shop.shopScreen.activeInHierarchy ? shop : null;
         }
 
         public override bool IsActive()
@@ -64,6 +67,10 @@ namespace Earplay.Module.Screens.Game
             AddLabelled(b, "shop:reroll", Private.Get<Button>(shop, "buttonReRoll"), shop.reRollButtonText, () => Later.Frames(40, () => SayCards(), "reroll"));
             AddLabelled(b, "shop:skip", Private.Get<Button>(shop, "buttonSkip"), shop.skipButtonText, null);
             b.AddItem(ControlId.Structural("shop:bag"), GameNodes.Button(() => Strings.ToolBag, BagScreen.Open));
+            b.AddItem(ControlId.Structural("shop:peek"), GameNodes.Button(() => Strings.ShopPeek, () =>
+            {
+                if (ShopManager.Instance != null) ShopManager.Instance.TogglePeek();
+            }));
             if (Round.Round.PlaysLine() != null)
                 b.AddItem(ControlId.Structural("shop:plays"), GameNodes.Text(Round.Round.PlaysLine));
             b.PopContext();

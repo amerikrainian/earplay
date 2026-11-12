@@ -196,6 +196,9 @@ namespace Earplay.Core.Strings
             // The shop, when its title is missing; an upgrade card's uses ({0} = how many).
             D("screen.shop", "Shop"),
             D("shop.uses", "{0} uses"),
+            // The shop's Peek button (an icon in the game): the board shown, Escape back to the shop.
+            D("shop.peek", "Peek"),
+            D("bind.shop.unpeek", "Back to the shop"),
             // The letter bag: {0} = how many tiles.
             D("bag.remaining", "in the bag, {0}"),
             D("bag.spent", "spent this round, {0}"),
@@ -448,6 +451,7 @@ namespace Earplay.Core.Strings
         public static string BagRemaining(int n) => F("bag.remaining", n);
         public static string ScreenShop => Get("screen.shop");
         public static string CardUses(int n) => F("shop.uses", n);
+        public static string ShopPeek => Get("shop.peek");
         public static string BagSpent(int n) => F("bag.spent", n);
         public static string PickedUp(string tile) => F("swap.picked", tile);
         public static string CantPickUp(string tile) => F("swap.cant_pick", tile);

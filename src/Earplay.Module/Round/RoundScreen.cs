@@ -185,6 +185,10 @@ namespace Earplay.Module.Round
     /// each cell its contents then its coordinates.</summary>
     internal sealed class BoardSection : ScreenSection
     {
+        // Read-only (the shop's peek): every cell reads, nothing acts.
+        private readonly bool _readOnly;
+        public BoardSection(bool readOnly = false) { _readOnly = readOnly; }
+
         public override void Build(GraphBuilder b)
         {
             var rows = Round.Board();
@@ -208,9 +212,9 @@ namespace Earplay.Module.Round
                         ControlType = ControlTypes.Text,
                         Announcements = new[] { GameNodes.LabelPart(() => Round.CellLine(Fresh(c))) },
                         Details = () => Round.CellDetails(Fresh(c)),
-                        OnActivate = Activator(c),
-                        OnSecondary = RoundScreen.RemoveLast,
-                        OnDrag = c.Kind == CellKind.Tile ? () => { var now = Fresh(c); TileSwap.Press(now.Holder, now.Tile); } : (System.Action)null,
+                        OnActivate = _readOnly ? null : Activator(c),
+                        OnSecondary = _readOnly ? null : (System.Action)RoundScreen.RemoveLast,
+                        OnDrag = !_readOnly && c.Kind == CellKind.Tile ? () => { var now = Fresh(c); TileSwap.Press(now.Holder, now.Tile); } : (System.Action)null,
                         ExcludeFromSearch = true,
                     });
                 }
@@ -249,6 +253,9 @@ namespace Earplay.Module.Round
     /// sends the slot's tile back to the board, Backspace takes the last tile out.</summary>
     internal sealed class WordSection : ScreenSection
     {
+        private readonly bool _readOnly;
+        public WordSection(bool readOnly = false) { _readOnly = readOnly; }
+
         public override void Build(GraphBuilder b)
         {
             var slots = Round.WordSlots();
@@ -264,10 +271,10 @@ namespace Earplay.Module.Round
                     ControlType = ControlTypes.Text,
                     Announcements = new[] { GameNodes.LabelPart(() => Round.SlotLine(s)) },
                     Details = () => Round.SlotTile(s) != null ? Round.CellDetailsOfTile(Round.SlotTile(s)) : null,
-                    OnActivate = RoundScreen.Submit,
-                    OnSecondary = RoundScreen.RemoveLast,
-                    OnDelete = () => { if (Round.SlotTile(s) != null && Round.CanInteract) s.ControllerInteractTile(); },
-                    OnDrag = () => TileSwap.Press(s, Round.SlotTile(s)),
+                    OnActivate = _readOnly ? null : (System.Action)RoundScreen.Submit,
+                    OnSecondary = _readOnly ? null : (System.Action)RoundScreen.RemoveLast,
+                    OnDelete = _readOnly ? null : (System.Action)(() => { if (Round.SlotTile(s) != null && Round.CanInteract) s.ControllerInteractTile(); }),
+                    OnDrag = _readOnly ? null : (System.Action)(() => TileSwap.Press(s, Round.SlotTile(s))),
                     ExcludeFromSearch = true,
                 });
             }
@@ -280,6 +287,9 @@ namespace Earplay.Module.Round
     /// message strip while it shows something.</summary>
     internal sealed class StatusSection : ScreenSection
     {
+        private readonly bool _readOnly;
+        public StatusSection(bool readOnly = false) { _readOnly = readOnly; }
+
         public override void Build(GraphBuilder b)
         {
             b.BeginStop("status");
@@ -293,11 +303,11 @@ namespace Earplay.Module.Round
             b.PopContext();
         }
 
-        private static void Line(GraphBuilder b, string key, System.Func<string> text)
+        private void Line(GraphBuilder b, string key, System.Func<string> text)
         {
             if (text() == null) return;
             var vt = GameNodes.Text(text);
-            vt.OnSecondary = RoundScreen.RemoveLast;
+            if (!_readOnly) vt.OnSecondary = RoundScreen.RemoveLast;
             b.AddItem(ControlId.Structural("status:" + key), vt);
         }
     }

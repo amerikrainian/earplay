@@ -377,8 +377,13 @@ as the same press (`TitlePages.Back`).
   (`allFilledGO`); the card's `additionalDescription` text is the control buffer; Enter buys
   (`myButton` -> `BuyThisCard`). Then Re-Roll and Skip as drawn, caption then cost ("Re-Roll, -1
   Plays": the "Left Text" first; `reRollButtonText` is the COST text), the letter bag (`BagScreen`),
-  the plays line. Peek (fades the shop to show the board) is left out. A re-roll reads the new cards
-  40 frames on. Not a keyboard lender: the game's keys are off in the shop.
+  Peek, the plays line. A re-roll reads the new cards 40 frames on. Not a keyboard lender: the game's
+  keys are off in the shop.
+- **Peek** (`Round/PeekScreen`, while the shop is showing and `ShopManager.peeking`): the shop's
+  Peek (`TogglePeek`, a fade of the shop's canvas; the zone stays Shop) shows the board, read by the
+  round's own sections in read-only form (`BoardSection(readOnly)` and kin: every cell reads, Enter,
+  Space, Backspace and Delete do nothing, and the keyboard is not lent). Escape toggles the peek off,
+  back to the shop.
 - **Bag** (`Round/BagScreen`, Enter on the Bag tool): `LetterBagManager.LetterBag` and `SpentLetters`
   (tile id strings: letter, type code S G D P F E T L, two digits of bonus points, two of special
   score) counted by how they read, "A, 1 point: 6"; a modal, Escape closes. The game's own drawer is
