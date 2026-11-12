@@ -139,8 +139,8 @@ namespace Earplay.Core.Strings
             D("cell.at", "{0}, {1} {2}"),
             D("cell.empty", "empty"),
             D("cell.locked_slot", "locked slot"),
-            // A board tile that is in the word now; {0} = the tile, {1} = its slot.
-            D("cell.in_word", "{0}, in word, slot {1}"),
+            // A board tile that is in the word now; {0} = the tile.
+            D("cell.in_word", "{0}, in word"),
             // A tile's points; {0} = the number (one key per form: the strings have no plurals).
             D("tile.point", "{0} point"),
             D("tile.points", "{0} points"),
@@ -172,10 +172,7 @@ namespace Earplay.Core.Strings
             // {0} = refreshes left / tiles in the bag.
             D("tool.refreshes_left", "{0} left"),
             D("tool.bag_tiles", "{0} tiles"),
-            // A word slot; {0} = its number, 1-based.
-            D("slot", "slot {0}"),
-            // {0} = the tile, {1} = the slot number.
-            D("slot.with_tile", "{0}, slot {1}"),
+
             D("slot.required", "required"),
             // A status line: {0} = its label, {1} = its value ("PLAYS: 10").
             D("status.pair", "{0}: {1}"),
@@ -395,7 +392,7 @@ namespace Earplay.Core.Strings
         public static string CellAt(string what, int column, int row) => F("cell.at", what, column, row);
         public static string CellEmpty => Get("cell.empty");
         public static string CellLockedSlot => Get("cell.locked_slot");
-        public static string TileInWord(string tile, int slot) => F("cell.in_word", tile, slot);
+        public static string TileInWord(string tile) => F("cell.in_word", tile);
         public static string Points(int n) => F(n == 1 ? "tile.point" : "tile.points", n);
         public static string TileGolden => Get("tile.golden");
         public static string TileDiamond => Get("tile.diamond");
@@ -420,8 +417,6 @@ namespace Earplay.Core.Strings
         public static string ToolBag => Get("tool.bag");
         public static string RefreshesLeft(int n) => F("tool.refreshes_left", n);
         public static string BagTiles(int n) => F("tool.bag_tiles", n);
-        public static string Slot(int n) => F("slot", n);
-        public static string SlotWithTile(string tile, int n) => F("slot.with_tile", tile, n);
         public static string SlotRequired => Get("slot.required");
         public static string StatusPair(string label, string value) => F("status.pair", label, value);
         public static string StatusPlays => Get("status.plays");

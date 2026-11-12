@@ -169,7 +169,7 @@ namespace Earplay.Module.Round
                     var tile = cell.Tile;
                     what = TileLine(tile);
                     if (tile.tileIsInSubmissionQueue)
-                        what = Strings.TileInWord(what, tile.positionOnSubmissionQueue + 1);
+                        what = Strings.TileInWord(what);
                     break;
                 case CellKind.LockedSlot: what = Strings.CellLockedSlot; break;
                 case CellKind.Empty: what = Strings.CellEmpty; break;
@@ -335,13 +335,14 @@ namespace Earplay.Module.Round
             return sub != null && id >= 0 && id < sub.submittingTiles.Count ? sub.submittingTiles[id] : null;
         }
 
-        /// <summary>"C, 3 points, slot 3", or "slot 5, empty, +5" (with "required" for slots 1 to 4).</summary>
+        /// <summary>"C, 3 points", or "empty, +5" ("empty, required" for slots 1 to 4). No slot
+        /// number: the keyboard fills the first empty slot, so the word reads in order.</summary>
         public static string SlotLine(TileHolderScript slot)
         {
             int n = slot.submissionID + 1;
             var tile = SlotTile(slot);
-            if (tile != null) return Strings.SlotWithTile(TileLine(tile), n);
-            var parts = new List<string> { Strings.Slot(n), Strings.CellEmpty };
+            if (tile != null) return TileLine(tile);
+            var parts = new List<string> { Strings.CellEmpty };
             if (n <= RequiredTiles()) parts.Add(Strings.SlotRequired);
             string bonus = SlotBonus(slot);
             if (bonus != null) parts.Add(bonus);

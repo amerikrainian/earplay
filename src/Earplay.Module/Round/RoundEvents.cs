@@ -10,8 +10,8 @@ namespace Earplay.Module.Round
 {
     /// <summary>
     /// What the round says as it happens. The word row is watched every frame while the round takes
-    /// input: a tile arriving is "C, slot 3" (typed or pressed alike, interrupting, so fast typing
-    /// stays current), one leaving is "C removed". Everything else is the game's own calls, hooked:
+    /// input: a tile arriving is "C" (typed or pressed alike, interrupting, so fast typing stays
+    /// current; the game puts it in the first empty slot), one leaving is "C removed". Everything else is the game's own calls, hooked:
     /// <list type="bullet">
     /// <item><c>KeyboardControl.Update</c> handles one typed letter a frame; when it found no tile for
     /// it (the row did not change), "no C".</item>
@@ -55,7 +55,7 @@ namespace Earplay.Module.Round
                     if (_row[i] != null && !now.Contains(_row[i])) removed.Add(_row[i]);
                 }
                 foreach (int i in added)
-                    Speech.Say(Strings.SlotWithTile(Round.TileName(now[i]), i + 1), interrupt: true);
+                    Speech.Say(Round.TileName(now[i]), interrupt: true);
                 if (removed.Count == 1 && added.Count == 0)
                     Speech.Say(Strings.TileRemoved(Round.TileName(removed[0])), interrupt: true);
             }

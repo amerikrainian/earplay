@@ -315,7 +315,7 @@ as the same press (`TitlePages.Back`).
     2 to 5) plus the tool column ("Grid of Tools": Backspace, Refresh, Bag, Submit, one per row) as
     column 6; rows share a row key (Up/Down keep the column). A cell is its contents, then "column
     row", 1-based, row 1 at the top: "C, 3 points, 4 1", "A, 1 point, emerald, 3 3", "E, 1 point, in
-    word, slot 2, 2 4" (a tile in the word leaves a faint copy in its spot), "locked slot, 1 1",
+    word, 2 4" (a tile in the word leaves a faint copy in its spot), "locked slot, 1 1",
     "Refresh, 5 left, 6 2", "Letter Bag, 80 tiles, 6 3", "Submit, disabled, 6 4". Tools are told apart
     by wiring (their scripts share one "Tools" object): Submit is `submissionButton`, Refresh has a
     `RefreshHelper`, Backspace / Shuffle are their `LongHoldScript.onShortPress` targets, Bag's
@@ -328,8 +328,10 @@ as the same press (`TitlePages.Back`).
     `ShuffleButtonOnPress`, `PressedSubmitButton`, the bag as `BagScreen`). The first visit lands on
     the first letter tile.
   - **Word** (`Round.WordSlots`): the shown submission slots (10, 20 once the tenth fills) as one row:
-    "C, 3 points, slot 3", "slot 5, empty, +5" (the slot's bonus as drawn), "required" on an empty one
-    of the first four (`numberOfTilesRequired`). Enter submits from any slot (`PressedSubmitButton`:
+    "C, 3 points", "empty, +5" (the slot's bonus as drawn), "empty, required" for the first four
+    (`numberOfTilesRequired`). No slot numbers: a typed or pressed tile goes to the FIRST empty slot
+    (`PutTileInFirstEmptySpace`), so the word fills in order; only a mouse drag places a tile
+    anywhere. Enter submits from any slot (`PressedSubmitButton`:
     its own refusal, "Words Must Have At Least 4 Tiles", comes back through the strip), Delete sends
     the slot's tile back.
   - **Status**: the score bar's "0 / 35, 35 Points Left", "ROUND 1 / 10, EASY MODE" (BarScript's
@@ -339,7 +341,7 @@ as the same press (`TitlePages.Back`).
     game's LIFO list), Shift+Backspace the whole word (`BackspaceButtonHold`), Ctrl+Backspace close
     gaps (`CloseAllGaps`), Escape the Options drawer (`TopDrawerManager.ToggleOptionsDrawer`).
   - **Events** (`RoundEvents`): the word row diffed every frame while `Round.Playing` and interaction
-    is on ("C, slot 3" interrupting, "C removed"); Harmony on `KeyboardControl.Update` ("no Z" when a
+    is on ("C" interrupting, "C removed"); Harmony on `KeyboardControl.Update` ("no Z" when a
     typed letter found no tile), `SubmitWord.SubmitTheWord` (board noted), `WordWasNotAccepted`
     ("SMOE: not a word"), `ReturnToGame` / `LogicManagerScript.FinishRound` ("BREAD: 13", the score
     line, "round complete", "new: E, 3 1; T, 4 2; ..." from the board diff, 15 frames on),
