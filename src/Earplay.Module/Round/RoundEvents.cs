@@ -123,6 +123,9 @@ namespace Earplay.Module.Round
                 if (roundWon) Speech.Say(Strings.RoundComplete);
                 string line = Round.ScoreLine();
                 if (line != null) Speech.Say(line);
+                // Quick Play's words-left notice; at the round's end it reads "0 Words", noise.
+                string next = roundWon ? null : Round.NextPerkLine();
+                if (next != null) Speech.Say(next);
                 if (!roundWon)
                 {
                     string fresh = NewTiles(before);
@@ -198,6 +201,20 @@ namespace Earplay.Module.Round
         private static class RoundFinished
         {
             private static void Prefix() => WordDone(roundWon: true);
+        }
+
+        // Quick Play: a medal won (the score bar draws it a moment after this call, on its flash).
+        [HarmonyPatch(typeof(BarScript), nameof(BarScript.WonAMedal))]
+        private static class MedalWon
+        {
+            private static void Postfix()
+            {
+                Later.Frames(30, () =>
+                {
+                    string medal = Round.MedalName();
+                    if (medal != null) Speech.Say(Strings.MedalWon(medal));
+                }, "medal won");
+            }
         }
 
         [HarmonyPatch(typeof(LastWordArea), nameof(LastWordArea.TutorialMessage))]

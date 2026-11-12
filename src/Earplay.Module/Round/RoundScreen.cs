@@ -382,6 +382,8 @@ namespace Earplay.Module.Round
             Line(b, "plays", Round.PlaysLine);
             Line(b, "refreshes", Round.RefreshesLine);
             Line(b, "bag", Round.BagLine);
+            Line(b, "nextperk", Round.NextPerkLine);
+            Line(b, "medal", Round.MedalLine);
             if (Round.MessageLine() != null) Line(b, "message", Round.MessageLine);
             b.PopContext();
         }

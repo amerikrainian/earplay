@@ -254,6 +254,9 @@ namespace Earplay.Module.Round
                 case SpecialTileManager.TileTypes.Potion: parts.Add(Strings.TilePotion); break;
                 case SpecialTileManager.TileTypes.FullStop: parts.Add(Strings.TileDot); break;
                 case SpecialTileManager.TileTypes.Transparent: parts.Add(Strings.TileGlass); break;
+                default:
+                    if (tile.transparent) parts.Add(Strings.TileGlass);
+                    break;
                 case SpecialTileManager.TileTypes.Locked:
                     parts.Add(Strings.TileLocked(tile.mySpecialScore % 10));
                     break;
@@ -343,9 +346,15 @@ namespace Earplay.Module.Round
             int n = slot.submissionID + 1;
             var tile = SlotTile(slot);
             string multiplier = SlotMultiplier(slot);
-            if (tile != null) return multiplier != null ? TileLine(tile) + ", " + multiplier : TileLine(tile);
+            if (tile != null)
+            {
+                string line = TileLine(tile);
+                if (MustBeVowel(slot)) line += ", " + Strings.SlotVowel;
+                return multiplier != null ? line + ", " + multiplier : line;
+            }
             var parts = new List<string> { Strings.CellEmpty };
             if (n <= RequiredTiles()) parts.Add(Strings.SlotRequired);
+            if (MustBeVowel(slot)) parts.Add(Strings.SlotVowel);
             string bonus = SlotBonus(slot);
             if (bonus != null) parts.Add(bonus);
             if (multiplier != null) parts.Add(multiplier);
@@ -359,6 +368,10 @@ namespace Earplay.Module.Round
                 if (text.gameObject.name == "Submission Number" && !string.IsNullOrWhiteSpace(text.text)) return text.text.Trim();
             return null;
         }
+
+        // A special round's "must be a vowel" marker on a slot (a consonant there breaks).
+        private static bool MustBeVowel(TileHolderScript slot)
+            => slot.mustBeVowel != null && slot.mustBeVowel.activeInHierarchy;
 
         // A slot's multiplier badge ("3x", an upgrade's: the tile there scores that many times), or null.
         private static string SlotMultiplier(TileHolderScript slot)
@@ -436,6 +449,40 @@ namespace Earplay.Module.Round
         {
             var bag = LetterBagManager.Instance;
             return bag == null ? null : Strings.StatusPair(Title(BonusDescriptions.Description.LetterBag) ?? Strings.ToolBag, bag.LetterBag.Count.ToString());
+        }
+
+        /// <summary>Quick Play's words-left notice ("Next Round in 4 Words", <c>NextPerkInfo</c>) while
+        /// it shows, else null.</summary>
+        public static string NextPerkLine()
+        {
+            var info = NextPerkInfo.Instance;
+            if (info == null || LogicManagerScript.Instance == null || !LogicManagerScript.Instance.inSpellingMode) return null;
+            var group = Private.Get<CanvasGroup>(info, "myCG");
+            if (group != null && group.alpha <= 0f) return null;
+            return Shown(Private.Get<TMP_Text>(info, "numberText"));
+        }
+
+        /// <summary>The medal Quick Play has reached ("medal: silver"), from the score bar's medal icon
+        /// (shown once one is won, its letter B, S or G), else null.</summary>
+        public static string MedalLine()
+        {
+            string name = MedalName();
+            return name != null ? Strings.StatusPair(Strings.Medal, name) : null;
+        }
+
+        public static string MedalName()
+        {
+            var bar = ScoreBar();
+            var medal = bar != null ? Private.Get<GameObject>(bar, "medal") : null;
+            if (medal == null || !medal.activeInHierarchy) return null;
+            var letter = Private.Get<TMP_Text>(bar, "medalLetter");
+            switch (letter != null ? letter.text.Trim() : "")
+            {
+                case "G": return Strings.MedalGold;
+                case "S": return Strings.MedalSilver;
+                case "B": return Strings.MedalBronze;
+                default: return letter != null ? letter.text.Trim() : null;
+            }
         }
 
         /// <summary>The strip above the word while it shows something: the last word and its score,

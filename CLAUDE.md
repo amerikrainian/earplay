@@ -449,6 +449,24 @@ as the same press (`TitlePages.Back`).
   "Words Spelled: 39", "Perks Purchased: 9", "Best Word: PADDING - 97", reached round, a new best),
   then the "Panel/Buttons" row's children through `UI/OptionRows` (Endless Mode or Play Again, Quit to
   Menu with its Sure?). Escape does nothing.
+- **Quick Play** (rule 6, `RuleInstance.simpleMode`, `LogicManagerScript.inSpellingMode`): the
+  round's own screens. Rounds are words (`wordsSpelled` of `wordsNeededForBonus`), the goal medals.
+  Status adds "Next Round in 4 Words" (`NextPerkInfo.numberText` while its `myCG` shows; also spoken
+  after each word) and "medal: silver" (the score bar's `medal` icon and its `medalLetter` B/S/G);
+  the round line already carries "NEXT MEDAL: 500" / "HIGH SCORE: ..." (`roundText`); `BarScript.
+  WonAMedal` is hooked: "silver medal won". The mode's card (`SpellingModeCard`) shows the run's
+  modifier, which is also modifier stub 0, read by the Modifiers stop. Its shop has no re-roll or
+  skip, its title is its own label ("Next Round...", under "Elements/Labels", not `shopTitleText`),
+  and its cards repeat the kind in the rarity slot ("Modifier, Modifier", read once). Verified live:
+  four words to the shop.
+- **Special-round slot marks**: a slot a "letter must be a vowel" round marks
+  (`TileHolderScript.mustBeVowel` shown, `SubmissionScript.MakeALetterMustBeVowel`) says "must be a
+  vowel" after its tile or empty line.
+- **Glass tiles** (the duplicate-to-glass upgrade: `UpgradeStubScript.glassTile`, parked in the
+  stub's own slot, a `TileHolderScript` with `upgradeSlot`): the upgrade reads "glass E, 1 point,
+  ready" (or "in word"); Enter on it is the game's press on that slot (`ControllerInteractTile`:
+  the glass tile into the word, or back). A tile reads "glass" for `myType` Transparent or the
+  `transparent` flag.
 - **Bag** (`Round/BagScreen`, Enter on the Bag tool): `LetterBagManager.LetterBag` and `SpentLetters`
   (tile id strings: letter, type code S G D P F E T L, two digits of bonus points, two of special
   score) counted by how they read, "A, 1 point: 6"; a modal, Escape closes. The game's own drawer is

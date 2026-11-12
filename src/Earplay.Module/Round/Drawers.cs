@@ -117,7 +117,10 @@ namespace Earplay.Module.Round
     /// Enter on a board or word tile applies it, through the same press on the tile, and Escape
     /// cancels); a button upgrade fires (<c>TriggerBonusButtonScript</c>, which the game's own press
     /// reaches only in keyboard or controller mode). Space with a tile picked up drops it on the upgrade
-    /// (<see cref="TileSwap.DropOnUpgrade"/>), the game's drag-and-drop route. Either way the tile is
+    /// (<see cref="TileSwap.DropOnUpgrade"/>), the game's drag-and-drop route. An upgrade that makes a
+    /// glass copy (<c>glassTile</c>, parked in its slot) names it ("glass E, 1 point, ready"), and Enter
+    /// is then the game's press on that slot: the glass tile into the word, or back; dropping the glass
+    /// tile back on its upgrade with Space breaks it, as the game's drag does. Either way the tile is
     /// re-read once the upgrade is done (<see cref="UpgradeConfirm"/>).
     /// </summary>
     internal sealed class UpgradesSection : ScreenSection
@@ -161,14 +164,29 @@ namespace Earplay.Module.Round
             parts.Add(Strings.UsesLeft(bonus.UpgradeGetNumberLeft(), bonus.UpgradeMaximum + extra));
             if (ReferenceEquals(ControlManagerScript.Instance?.stubAcceptingATile, s) && ControlManagerScript.Instance.inUpgradeTileSelectMode)
                 parts.Add(Strings.UpgradePicking);
+            // The glass copy an upgrade made, parked in its slot until it goes into a word.
+            var glass = Glass(s);
+            if (glass != null)
+                parts.Add(glass.tileIsInSubmissionQueue ? Strings.GlassInWord(Round.TileLine(glass)) : Strings.GlassHere(Round.TileLine(glass)));
             return string.Join(", ", parts);
         }
 
         private static void Use(UpgradeStubScript s)
         {
             if (!Round.CanInteract) return;
+            // With a glass copy waiting, the press is the game's on the upgrade's slot: the glass tile
+            // goes into the word (or back from it).
+            var glass = Glass(s);
+            var slot = s.GetComponentInChildren<TileHolderScript>(false);
+            if (glass != null && slot != null) { slot.ControllerInteractTile(); return; }
             if (s.associatedBonus.HasButton) s.TriggerBonusButtonScript();
             else s.PlayerClickedUpgrade();
+        }
+
+        private static TileScript Glass(UpgradeStubScript s)
+        {
+            var glass = s.glassTileHasBeenCreated ? s.glassTile : null;
+            return glass != null && !glass.fullySpent ? glass : null;
         }
     }
 

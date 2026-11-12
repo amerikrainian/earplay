@@ -46,8 +46,7 @@ namespace Earplay.Module.Screens.Game
         {
             var shop = Shop();
             if (shop == null) return;
-            var title = shop.shopTitleText;
-            b.PushContext(title != null && !string.IsNullOrWhiteSpace(title.text) ? title.text : Strings.ScreenShop, null, positions: false);
+            b.PushContext(Title(shop) ?? Strings.ScreenShop, null, positions: false);
 
             var cards = Cards(shop);
             if (cards.Count > 0)
@@ -76,6 +75,23 @@ namespace Earplay.Module.Screens.Game
             b.PopContext();
         }
 
+        // The shop's title as shown: "Round 1 Complete" (shopTitleText), or Quick Play's own label
+        // ("Next Round...", a separate label the title field does not hold).
+        private static string Title(ShopManager shop)
+        {
+            var title = shop.shopTitleText;
+            if (title != null && title.gameObject.activeInHierarchy && !string.IsNullOrWhiteSpace(title.text)) return title.text;
+            var labels = shop.shopScreen.transform.Find("Elements/Labels");
+            if (labels == null) return null;
+            foreach (var text in labels.GetComponentsInChildren<TMP_Text>(false))
+            {
+                if (text.GetComponentInParent<Button>() != null) continue;
+                var lines = GameNodesText.Lines(text.text);
+                if (lines.Count > 0) return lines[0];
+            }
+            return null;
+        }
+
         private static List<BonusCardScript> Cards(ShopManager shop)
         {
             var list = new List<BonusCardScript>();
@@ -90,7 +106,9 @@ namespace Earplay.Module.Screens.Game
         {
             var parts = new List<string>();
             Add(parts, Private.Get<TMP_Text>(card, "headerText"));
-            Add(parts, Private.Get<TMP_Text>(card, "rarityText"));
+            // Quick Play's cards repeat the kind where the rarity goes ("Modifier, Modifier"): once.
+            var rarity = Private.Get<TMP_Text>(card, "rarityText");
+            if (rarity != null && (parts.Count == 0 || rarity.text.Trim() != parts[0])) Add(parts, rarity);
             Add(parts, Private.Get<TMP_Text>(card, "myDescription"));
             var bonus = card.associatedBonus;
             if (bonus != null && bonus.BonusType == BaseBonus.Type.Upgrade && bonus.UpgradeMaximum > 0)

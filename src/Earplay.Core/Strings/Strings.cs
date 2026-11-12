@@ -183,6 +183,17 @@ namespace Earplay.Core.Strings
             D("tool.bag_tiles", "{0} tiles"),
 
             D("slot.required", "required"),
+            // A special round's marked slot: a consonant there breaks.
+            D("slot.vowel", "must be a vowel"),
+            // An upgrade's glass copy: {0} = the tile, waiting in the upgrade or in the word.
+            D("glass.here", "{0}, ready"),
+            D("glass.in_word", "{0}, in word"),
+            // Quick Play's medals: the status line's label, the medals, and the moment one is won.
+            D("medal", "medal"),
+            D("medal.bronze", "bronze"),
+            D("medal.silver", "silver"),
+            D("medal.gold", "gold"),
+            D("medal.won", "{0} medal won"),
             // A status line: {0} = its label, {1} = its value ("PLAYS: 10").
             D("status.pair", "{0}: {1}"),
             D("status.plays", "Plays"),
@@ -474,6 +485,14 @@ namespace Earplay.Core.Strings
         public static string RefreshesLeft(int n) => F("tool.refreshes_left", n);
         public static string BagTiles(int n) => F("tool.bag_tiles", n);
         public static string SlotRequired => Get("slot.required");
+        public static string SlotVowel => Get("slot.vowel");
+        public static string GlassHere(string tile) => F("glass.here", tile);
+        public static string GlassInWord(string tile) => F("glass.in_word", tile);
+        public static string Medal => Get("medal");
+        public static string MedalBronze => Get("medal.bronze");
+        public static string MedalSilver => Get("medal.silver");
+        public static string MedalGold => Get("medal.gold");
+        public static string MedalWon(string medal) => F("medal.won", medal);
         public static string StatusPair(string label, string value) => F("status.pair", label, value);
         public static string StatusPlays => Get("status.plays");
         public static string TileRemoved(string tile) => F("event.removed", tile);
