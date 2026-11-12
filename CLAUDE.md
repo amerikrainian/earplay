@@ -338,7 +338,10 @@ as the same press (`TitlePages.Back`).
     `GraphBuilder.VerticalTarget`); entering it says "Word"; Alt+W jumps to it keeping the column (board column n to slot n; from the
     status, slot 1), as a move (`Navigation.MoveTo`). Each slot:
     "C, 3 points", "empty, +5" (the slot's bonus as drawn), "empty, required" for the first four
-    (`numberOfTilesRequired`). No slot numbers: a typed or pressed tile goes to the FIRST empty slot
+    (`numberOfTilesRequired`), and a slot's multiplier badge after either ("3x": an upgrade's,
+    `SubmissionTileSpace.hasMultiplier` / `multiplierTex`). The game has NO score preview: modifiers
+    apply only at scoring; before it, a tile shows its own value alone (a mirror or "!" tile's value
+    updates live, `SubmissionQueueChanged`, and `GetTileScore` reads it). No slot numbers: a typed or pressed tile goes to the FIRST empty slot
     (`PutTileInFirstEmptySpace`), so the word fills in order; only a mouse drag places a tile
     anywhere. Enter submits from any slot (`PressedSubmitButton`:
     its own refusal, "Words Must Have At Least 4 Tiles", comes back through the strip), Delete sends

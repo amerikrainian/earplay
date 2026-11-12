@@ -342,11 +342,13 @@ namespace Earplay.Module.Round
         {
             int n = slot.submissionID + 1;
             var tile = SlotTile(slot);
-            if (tile != null) return TileLine(tile);
+            string multiplier = SlotMultiplier(slot);
+            if (tile != null) return multiplier != null ? TileLine(tile) + ", " + multiplier : TileLine(tile);
             var parts = new List<string> { Strings.CellEmpty };
             if (n <= RequiredTiles()) parts.Add(Strings.SlotRequired);
             string bonus = SlotBonus(slot);
             if (bonus != null) parts.Add(bonus);
+            if (multiplier != null) parts.Add(multiplier);
             return string.Join(", ", parts);
         }
 
@@ -356,6 +358,15 @@ namespace Earplay.Module.Round
             foreach (var text in slot.GetComponentsInChildren<TMP_Text>(false))
                 if (text.gameObject.name == "Submission Number" && !string.IsNullOrWhiteSpace(text.text)) return text.text.Trim();
             return null;
+        }
+
+        // A slot's multiplier badge ("3x", an upgrade's: the tile there scores that many times), or null.
+        private static string SlotMultiplier(TileHolderScript slot)
+        {
+            var space = slot.submissionTileSlot;
+            if (space == null || !space.hasMultiplier) return null;
+            var text = Private.Get<TMP_Text>(space, "multiplierTex");
+            return text != null && !string.IsNullOrWhiteSpace(text.text) ? text.text.Trim() : null;
         }
 
         private static int RequiredTiles()
