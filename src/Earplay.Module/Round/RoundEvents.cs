@@ -144,6 +144,9 @@ namespace Earplay.Module.Round
                 }
             }
 
+            // The game picks the tile inside this call, and a found tile joins the word at once
+            // (AddToSubmissionList counts it), so the count before and after tells "no tile" with no
+            // wait: fast typing gets its "no Z" right away, whatever earlier tiles are still flying.
             private static void Postfix(string __state)
             {
                 if (__state == null || SubmissionScript.Instance == null) return;
@@ -152,15 +155,8 @@ namespace Earplay.Module.Round
                     int bar = __state.IndexOf('|');
                     string letter = __state.Substring(0, bar);
                     int before = int.Parse(__state.Substring(bar + 1));
-                    // A found tile is on its way into the row (counted on arrival), so look a few
-                    // frames on.
-                    Later.Frames(3, () =>
-                    {
-                        var sub = SubmissionScript.Instance;
-                        if (sub == null || sub.numberOfFilledTiles != before) return;
-                        foreach (var t in sub.submittingTiles) if (t != null && t.tileIsMoving) return;
+                    if (SubmissionScript.Instance.numberOfFilledTiles == before)
                         Speech.Say(Strings.NoTile(letter), interrupt: true);
-                    }, "no tile");
                 }
                 catch (Exception e) { CoreLog.Warning("RoundEvents: typed letter: " + e.Message); }
             }
