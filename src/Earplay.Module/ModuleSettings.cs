@@ -13,5 +13,14 @@ namespace Earplay.Module
             get => ModuleMain.Host == null || ModuleMain.Host.Settings.Store.GetBool("speak_coordinates", true);
             set { if (ModuleMain.Host != null) ModuleMain.Host.Settings.Store.SetBool("speak_coordinates", value); }
         }
+
+        /// <summary>Whether a word's scoring is read step by step (each tile's points, modifiers and
+        /// special tiles taking effect, the total's parts). Off, only the word and its total. On by
+        /// default.</summary>
+        public static bool ScoreBreakdown
+        {
+            get => ModuleMain.Host == null || ModuleMain.Host.Settings.Store.GetBool("score_breakdown", true);
+            set { if (ModuleMain.Host != null) ModuleMain.Host.Settings.Store.SetBool("score_breakdown", value); }
+        }
     }
 }

@@ -244,7 +244,8 @@ names in the key help ("Ctrl+Shift+A", "Up Arrow") are not translated.
 `<game>\BepInEx\config\com.amerikranian.earplay.cfg`, owned by the host so values survive reloads,
 edited in the mod menu's Settings: `focus_mode_on_launch` (default on), `speak_positions` (list
 positions, "2 of 5": default OFF), and `speak_coordinates` (a board cell's "column row" after its
-contents, and in the new-tiles line: default on). Settings only the module reads live in
+contents, and in the new-tiles line: default on), `score_breakdown` (a word's scoring step by step:
+default on). Settings only the module reads live in
 `Module/ModuleSettings`, keyed straight into the host's store, so adding one needs no host change. A new default reaches only a fresh config: BepInEx writes the
 bound value the first time and keeps it.
 
@@ -421,6 +422,16 @@ as the same press (`TitlePages.Back`).
   round's own sections in read-only form (`BoardSection(readOnly)` and kin: every cell reads, Enter,
   Space, Backspace and Delete do nothing, and the keyboard is not lent). Escape toggles the peek off,
   back to the shop.
+- **Score breakdown** (`Round/ScoreBreakdown`, on by default, mod menu "Score breakdown" /
+  `score_breakdown`; off = the word and total only): a word's scoring read as the player watches it,
+  each step queued as the game shows it, from its display calls: a tile's points on its slot
+  (`SubmissionTileSpace.showScore`, "B, 3"), `SpecialTileManager.PingEmerald` ("emerald hit"),
+  `PlayGoldSubmissionSound` ("golden 2"), `PingDot`'s result ("dot, times 3"),
+  `ScoreZoneScript.FinishGold`, a modifier's flash (`ModifierStubScript.PingModifierStub`: its stub
+  text; also outside a word), the total (`BarScript.ChangeFinalScore`, parts from `SubmitWord`'s
+  `wordScoreForLog` / `bonusScoreForLog`: "12 plus 10: 22"), a modifier's change to it
+  (`ChangeFinalFinalScore`), the plays popup (`LifeBarScript.PopupText`, while `Round.Playing`).
+  The game has no score preview before submitting.
 - **Bag** (`Round/BagScreen`, Enter on the Bag tool): `LetterBagManager.LetterBag` and `SpentLetters`
   (tile id strings: letter, type code S G D P F E T L, two digits of bonus points, two of special
   score) counted by how they read, "A, 1 point: 6"; a modal, Escape closes. The game's own drawer is

@@ -209,6 +209,21 @@ namespace Earplay.Core.Strings
             // The shop's Peek button (an icon in the game): the board shown, Escape back to the shop.
             D("shop.peek", "Peek"),
             D("bind.shop.unpeek", "Back to the shop"),
+            // A word's scoring, step by step. {0} = the tile, {1} = the points it scored.
+            D("breakdown.tile", "{0}, {1}"),
+            D("breakdown.emerald", "emerald hit"),
+            // {0} = how many golden tiles so far.
+            D("breakdown.golden", "golden {0}"),
+            // {0} = the dot's multiplier.
+            D("breakdown.dot", "dot, times {0}"),
+            // {0} = the golden tiles' multiplier, {1} = the letters' total after it.
+            D("breakdown.golden_applied", "golden, times {0}: {1}"),
+            // The word's total: {0} = its letters, {1} = the slots' bonus, {2} = the total.
+            D("breakdown.total", "{0} plus {1}: {2}"),
+            // A modifier changed the total; {0} = the new total.
+            D("breakdown.total_changed", "total {0}"),
+            // The plays bar's popup; {0} = its text ("-1", "+3").
+            D("breakdown.plays", "plays {0}"),
             // The letter bag: {0} = how many tiles.
             D("bag.remaining", "in the bag, {0}"),
             D("bag.spent", "spent this round, {0}"),
@@ -240,6 +255,8 @@ namespace Earplay.Core.Strings
             D("mod.focus_on_launch", "Keyboard navigation on at launch"),
             // Whether the round's board cells end with their column and row.
             D("mod.speak_coordinates", "Speak board coordinates"),
+            // Whether a word's scoring is read step by step; off, only its total.
+            D("mod.score_breakdown", "Score breakdown"),
             // {0} = the key category, one of the three names below.
             D("mod.key_category", "{0} keys"),
             // The key categories of the "All keys" list: live everywhere, on the focused screen, in a game.
@@ -468,6 +485,14 @@ namespace Earplay.Core.Strings
         public static string Sorted => Get("event.sorted");
         public static string Refreshed(int left) => F("event.refreshed", left);
         public static string BagRemaining(int n) => F("bag.remaining", n);
+        public static string BreakdownTile(string tile, int points) => F("breakdown.tile", tile, points);
+        public static string BreakdownEmerald => Get("breakdown.emerald");
+        public static string BreakdownGolden(int n) => F("breakdown.golden", n);
+        public static string BreakdownDot(string times) => F("breakdown.dot", times);
+        public static string BreakdownGoldenApplied(int times, string total) => F("breakdown.golden_applied", times, total);
+        public static string BreakdownTotal(int letters, int bonus, int total) => F("breakdown.total", letters, bonus, total);
+        public static string BreakdownTotalChanged(string total) => F("breakdown.total_changed", total);
+        public static string BreakdownPlays(string popup) => F("breakdown.plays", popup);
         public static string ScreenShop => Get("screen.shop");
         public static string CardUses(int n) => F("shop.uses", n);
         public static string ShopPeek => Get("shop.peek");
@@ -495,6 +520,7 @@ namespace Earplay.Core.Strings
         public static string ModSpeakPositions => Get("mod.speak_positions");
         public static string ModFocusOnLaunch => Get("mod.focus_on_launch");
         public static string ModSpeakCoordinates => Get("mod.speak_coordinates");
+        public static string ModScoreBreakdown => Get("mod.score_breakdown");
         public static string HelpNone => Get("help.none");
         public static string HelpRow(string label, string keys) => F("help.row", label, keys);
 

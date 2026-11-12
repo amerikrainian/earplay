@@ -68,6 +68,8 @@ namespace Earplay.Module.Screens
                 () => settings.FocusModeOnLaunch, v => settings.FocusModeOnLaunch = v));
             b.AddItem(ControlId.Structural("modsettings:coordinates"), Toggle(() => Strings.ModSpeakCoordinates,
                 () => ModuleSettings.SpeakCoordinates, v => ModuleSettings.SpeakCoordinates = v));
+            b.AddItem(ControlId.Structural("modsettings:breakdown"), Toggle(() => Strings.ModScoreBreakdown,
+                () => ModuleSettings.ScoreBreakdown, v => ModuleSettings.ScoreBreakdown = v));
             b.PopContext();
         }
 
