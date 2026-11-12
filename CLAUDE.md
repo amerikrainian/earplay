@@ -443,6 +443,12 @@ as the same press (`TitlePages.Back`).
   With it on, the word's closing line names the word alone ("PADDING"), the total already given;
   off, "PADDING: 97". Verified live on PADDING (golden tiles, two modifiers).
   The game has no score preview before submitting.
+- **End screen** (`Screens/Game/EndScreen`, zone EndScreen while `LogicManagerScript.gOScreen`'s
+  `gameOverScreen` is shown): its title (`topText`: "You Win!", "You Lose...", "Not Enough Tiles!")
+  names it; one stop: every shown text of the panel but button captions, line by line (the stats:
+  "Words Spelled: 39", "Perks Purchased: 9", "Best Word: PADDING - 97", reached round, a new best),
+  then the "Panel/Buttons" row's children through `UI/OptionRows` (Endless Mode or Play Again, Quit to
+  Menu with its Sure?). Escape does nothing.
 - **Bag** (`Round/BagScreen`, Enter on the Bag tool): `LetterBagManager.LetterBag` and `SpentLetters`
   (tile id strings: letter, type code S G D P F E T L, two digits of bonus points, two of special
   score) counted by how they read, "A, 1 point: 6"; a modal, Escape closes. The game's own drawer is
