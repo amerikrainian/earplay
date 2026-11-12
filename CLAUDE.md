@@ -307,7 +307,9 @@ as the same press (`TitlePages.Back`).
   the word strip as its last row) and the status; active while
   `Round.OnScreen`: the game's `GamepadControl.currentControlZone` is LetterGrid, or Menu / LetterBag /
   Tutorial, the panels that open over the grid and return to it, so focus survives them;
-  `KeepStateOnPop` keeps it across the shop). It LENDS THE KEYBOARD (`FocusMode`, `IKeyboardLender`):
+  `KeepStateOnPop` keeps it across the shop; coming on screen it waits for
+  `ControlManagerScript.canInteract` once, so the landing reads the new round's settled board, not
+  a tile the round's deal or refresh is about to replace). It LENDS THE KEYBOARD (`FocusMode`, `IKeyboardLender`):
   the device stays enabled and the game's clashing actions are disabled by name (Navigate, Interact,
   Nav Left/Right, Close Gaps, Submit Tiles, Backspace, Options), so letters type into the game
   anywhere on the round (`KeyboardControl.OnTextInput`, the game choosing the tile: mandatory, then

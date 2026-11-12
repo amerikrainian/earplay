@@ -66,7 +66,26 @@ namespace Earplay.Module.Round
         public override bool AllowsTypeahead => false;
         public IReadOnlyList<string> BlockedGameActions => Blocked;
 
-        public override bool IsActive() => Round.OnScreen;
+        // Whether the round has settled since it last came on screen. Coming back from the shop, the
+        // game deals and refreshes the new round's tiles with interaction paused; landing then would
+        // read a tile about to change. So the round waits for interaction to resume once; after that
+        // a pause (scoring, an upgrade) no longer matters until the round leaves the screen again.
+        private bool _arrived;
+
+        public override bool IsActive()
+        {
+            if (!Round.OnScreen)
+            {
+                _arrived = false;
+                return false;
+            }
+            if (!_arrived)
+            {
+                if (!Round.CanInteract) return false;
+                _arrived = true;
+            }
+            return true;
+        }
         // Focus survives the shop and the end of a round: back on the board where it was.
         public override bool KeepStateOnPop => true;
 
