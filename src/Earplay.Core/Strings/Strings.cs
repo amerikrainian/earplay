@@ -32,7 +32,8 @@ namespace Earplay.Core.Strings
             D("app.focus_on", "navigation on"),
             D("app.focus_off", "navigation off"),
 
-            // Control role words, spoken after the label ("Play, button").
+            // Control role words, spoken after the label ("Play, button"). A list has no role word:
+            // a context names its group by its label alone.
             D("role.button", "button"),
             D("role.toggle", "toggle"),
             D("role.slider", "slider"),
@@ -42,7 +43,6 @@ namespace Earplay.Core.Strings
             D("role.key binding", "key binding"),
             D("role.item", "item"),
             D("role.heading", "heading"),
-            D("role.list", "list"),
             D("role.table", "table"),
             D("role.link", "link"),
             D("role.edit", "edit"),
@@ -263,7 +263,6 @@ namespace Earplay.Core.Strings
         /// <summary>A control's role word ("button"), or null for a role with no word.</summary>
         public static string Role(string word) => Has("role." + word) ? Get("role." + word) : null;
         public static string RoleTable => Get("role.table");
-        public static string RoleList => Get("role.list");
         public static string RoleHeading => Get("role.heading");
         public static string RoleDialog => Get("role.dialog");
 
