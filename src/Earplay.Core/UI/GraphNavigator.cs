@@ -640,20 +640,10 @@ namespace Earplay.Core.UI
                 return LandOnStop(stops[step >= 0 ? 0 : stops.Count - 1]);
             }
 
-            int ni = idx + step;
-            if (ni < 0 || ni >= stops.Count)
-            {
-                if (Screen != null && Screen.StartUnfocused)
-                {
-                    Blur(); // truly unfocused: a later re-entry stays with the game
-                    if (!string.IsNullOrEmpty(Screen.ScreenName)) Speak(Screen.ScreenName, interrupt: true);
-                    return true;
-                }
-                if (Screen != null && Screen.Wrap)
-                    ni = ((ni % stops.Count) + stops.Count) % stops.Count;
-                else
-                    return true; // at the end; consume, no wrap
-            }
+            // Tab always wraps; with a single stop there is nowhere to go, so the key is consumed
+            // silently rather than re-landing on the stop it is already in.
+            if (stops.Count == 1) return true;
+            int ni = ((idx + step) % stops.Count + stops.Count) % stops.Count;
             return LandOnStop(stops[ni]);
         }
 

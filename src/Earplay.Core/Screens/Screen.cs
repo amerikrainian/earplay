@@ -16,9 +16,6 @@ namespace Earplay.Core.Screens
     /// </summary>
     public abstract class Screen
     {
-        /// <summary>Whether Tab wraps from the last stop back to the first.</summary>
-        public bool Wrap { get; set; }
-
         /// <summary>Screen-level actions (Back/Escape handlers and the like), dispatched by id.</summary>
         public virtual IEnumerable<ElementAction> GetActions() { yield break; }
 
@@ -57,8 +54,8 @@ namespace Earplay.Core.Screens
         public abstract bool IsActive();
 
         /// <summary>When true, the screen starts with NO focused element: input (arrows) bubbles to the
-        /// global handlers, and Tab ENTERS the screen's element tree. Tabbing past the ends returns to this
-        /// unfocused state.</summary>
+        /// global handlers, and Tab ENTERS the screen's element tree (and then wraps round its stops, as
+        /// on any screen).</summary>
         public virtual bool StartUnfocused => false;
 
         /// <summary>When true (and this is the focused screen), InputManager stops dispatching so raw keys

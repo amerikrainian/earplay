@@ -26,8 +26,8 @@ namespace Earplay.Core.UI
         /// announce memory survive); a new screen resets both.</summary>
         public abstract void Attach(Screen screen);
 
-        /// <summary>Drop focus back to the screen's unfocused state, the same place Tab-off-the-end
-        /// lands. On a <see cref="Screen.StartUnfocused"/> screen the keyboard returns to the game and
+        /// <summary>Drop focus back to the screen's unfocused state.
+        /// On a <see cref="Screen.StartUnfocused"/> screen the keyboard returns to the game and
         /// stays there; on other screens focus re-establishes next frame.</summary>
         public abstract void Blur();
 
