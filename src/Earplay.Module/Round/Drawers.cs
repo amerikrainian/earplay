@@ -1,0 +1,186 @@
+using System.Collections.Generic;
+using Earplay.Core;
+using Earplay.Core.Graph;
+using Earplay.Core.Screens;
+using Earplay.Core.Strings;
+using Earplay.Core.UI;
+using Earplay.Module.Interop;
+using Earplay.Module.UI;
+using TMPro;
+using UnityEngine;
+
+namespace Earplay.Module.Round
+{
+    /// <summary>
+    /// The modifiers the player owns (<c>BonusInventory.allModifierStubs</c> with
+    /// <c>hasAPurchasedModifer</c>, in the drawer's order, which is the order they score in): each its
+    /// stub text ("Refresh on New Round"), its score badge when it shows one, "disabled" when greyed
+    /// out; the card's full description (<c>shopDescription</c>, then its <c>additionalDescription</c>)
+    /// is the control buffer. Enter slides out the game's Sell (<c>ToggleCard</c>) and lands on it, listed
+    /// right after the card while out ("Sell, +1", the refreshes it gives); Enter on it sells
+    /// (<c>SellStub</c>), Enter on the card again slides it back. The drawer need not be open: its buttons answer either way.
+    /// </summary>
+    internal sealed class ModifiersSection : ScreenSection
+    {
+        public override void Build(GraphBuilder b)
+        {
+            var inv = BonusInventory.Instance;
+            if (inv == null) return;
+            var owned = new List<ModifierStubScript>();
+            foreach (var stub in inv.allModifierStubs)
+                if (stub != null && stub.hasAPurchasedModifer && stub.associatedModifier != null) owned.Add(stub);
+            if (owned.Count == 0) return;
+            owned.Sort((x, y) => x.transform.GetSiblingIndex().CompareTo(y.transform.GetSiblingIndex()));
+
+            b.BeginStop("modifiers");
+            b.PushContext(Strings.RoundModifiers);
+            foreach (var stub in owned)
+            {
+                var s = stub;
+                string id = "modifier:" + inv.allModifierStubs.IndexOf(s);
+                b.AddItem(ControlId.Structural(id), new NodeVtable
+                {
+                    ControlType = ControlTypes.Button,
+                    Announcements = new List<NodeAnnouncement> { GameNodes.LabelPart(() => Line(s)) },
+                    SearchText = () => Text(Private.Get<TMP_Text>(s, "myDescription")),
+                    Details = () => Drawers.Description(s.associatedModifier),
+                    OnActivate = () =>
+                    {
+                        bool wasShowing = s.sellIconIsShowing;
+                        s.ToggleCard();
+                        // Sliding out: focus goes to the Sell it uncovered, once the slide ends (the game
+                        // sets sellIconIsShowing when its tween completes).
+                        if (!wasShowing) LandOnSell(s, id + ":sell", 20);
+                    },
+                    OnSecondary = RoundScreen.RemoveLast,
+                });
+                if (s.sellIconIsShowing && s.mySellButton != null)
+                {
+                    b.AddItem(ControlId.Structural(id + ":sell"), GameNodes.Button(() => SellLine(s), () =>
+                    {
+                        s.SellStub();
+                        Later.Frames(40, () =>
+                        {
+                            string line = Round.RefreshesLine();
+                            if (line != null) Speech.Say(line, interrupt: true);
+                        }, "sold");
+                    }, () => s.mySellButton.interactable));
+                }
+            }
+            b.PopContext();
+        }
+
+        private static void LandOnSell(ModifierStubScript s, string sellId, int tries)
+        {
+            Later.Frames(3, () =>
+            {
+                if (s == null) return;
+                if (s.sellIconIsShowing) Navigation.MoveTo(ControlId.Structural(sellId));
+                else if (tries > 0 && s.stubIsMoving) LandOnSell(s, sellId, tries - 1);
+            }, "sell");
+        }
+
+        private static string Line(ModifierStubScript s)
+        {
+            var parts = new List<string>();
+            string text = Text(Private.Get<TMP_Text>(s, "myDescription"));
+            if (text != null) parts.Add(text);
+            var badge = Private.Get<GameObject>(s, "wordScoreArea");
+            if (badge != null && badge.activeInHierarchy)
+            {
+                string score = Text(Private.Get<TMP_Text>(s, "wordScoreText"));
+                if (score != null) parts.Add(score);
+            }
+            var disabled = Private.Get<GameObject>(s, "disabledOverlay");
+            if (disabled != null && disabled.activeInHierarchy) parts.Add(Strings.StateDisabled);
+            return string.Join(", ", parts);
+        }
+
+        // "Sell, +1": the button's two lines.
+        private static string SellLine(ModifierStubScript s)
+            => string.Join(", ", GameNodesText.Lines(Private.Get<TMP_Text>(s, "sellAmount")?.text ?? Strings.ModifierSell));
+
+        internal static string Text(TMP_Text t)
+        {
+            if (t == null || string.IsNullOrWhiteSpace(t.text)) return null;
+            var lines = GameNodesText.Lines(t.text);
+            return lines.Count > 0 ? string.Join(", ", lines) : null;
+        }
+    }
+
+    /// <summary>
+    /// The upgrades the player owns (<c>BonusInventory.allUpgradeStubs</c> with
+    /// <c>hasAPurchasedUpgrade</c>): each its stub text and the uses it has left
+    /// (<c>UpgradeGetNumberLeft</c> of <c>UpgradeMaximum</c> plus <c>extraUpgradePoints</c>, the dots);
+    /// the card's full description is the control buffer. Enter is the game's keyboard press on the
+    /// stub: a tile upgrade starts the game's "Pick a tile to upgrade" (<c>PlayerClickedUpgrade</c>; then
+    /// Enter on a board or word tile applies it, through the same press on the tile, and Escape
+    /// cancels); a button upgrade fires (<c>TriggerBonusButtonScript</c>, which the game's own press
+    /// reaches only in keyboard or controller mode).
+    /// </summary>
+    internal sealed class UpgradesSection : ScreenSection
+    {
+        public override void Build(GraphBuilder b)
+        {
+            var inv = BonusInventory.Instance;
+            if (inv == null || inv.allUpgradeStubs == null) return;
+            var owned = new List<UpgradeStubScript>();
+            foreach (var stub in inv.allUpgradeStubs)
+                if (stub != null && stub.hasAPurchasedUpgrade && stub.associatedBonus != null) owned.Add(stub);
+            if (owned.Count == 0) return;
+
+            b.BeginStop("upgrades");
+            b.PushContext(Strings.RoundUpgrades);
+            foreach (var stub in owned)
+            {
+                var s = stub;
+                b.AddItem(ControlId.Structural("upgrade:" + inv.allUpgradeStubs.IndexOf(s)), new NodeVtable
+                {
+                    ControlType = ControlTypes.Button,
+                    Announcements = new List<NodeAnnouncement> { GameNodes.LabelPart(() => Line(s)) },
+                    SearchText = () => ModifiersSection.Text(Private.Get<TMP_Text>(s, "myDescription")),
+                    Details = () => Drawers.Description(s.associatedBonus),
+                    OnActivate = () => Use(s),
+                    OnSecondary = RoundScreen.RemoveLast,
+                });
+            }
+            b.PopContext();
+        }
+
+        private static string Line(UpgradeStubScript s)
+        {
+            var parts = new List<string>();
+            string text = ModifiersSection.Text(Private.Get<TMP_Text>(s, "myDescription"));
+            if (text != null) parts.Add(text);
+            var bonus = s.associatedBonus;
+            int extra = BonusInventory.Instance != null ? BonusInventory.Instance.extraUpgradePoints : 0;
+            parts.Add(Strings.UsesLeft(bonus.UpgradeGetNumberLeft(), bonus.UpgradeMaximum + extra));
+            if (ReferenceEquals(ControlManagerScript.Instance?.stubAcceptingATile, s) && ControlManagerScript.Instance.inUpgradeTileSelectMode)
+                parts.Add(Strings.UpgradePicking);
+            return string.Join(", ", parts);
+        }
+
+        private static void Use(UpgradeStubScript s)
+        {
+            if (!Round.CanInteract) return;
+            if (s.associatedBonus.HasButton) s.TriggerBonusButtonScript();
+            else s.PlayerClickedUpgrade();
+        }
+    }
+
+    internal static class Drawers
+    {
+        /// <summary>A card's full description: its shop text, then the game's longer description of
+        /// what it mentions.</summary>
+        public static IEnumerable<string> Description(BaseBonus bonus)
+        {
+            var lines = new List<string>();
+            if (bonus == null) return lines;
+            lines.AddRange(GameNodesText.Lines(bonus.shopDescription));
+            var d = BonusDescriptions.Instance;
+            if (d != null && bonus.additionalDescription != BonusDescriptions.Description.None)
+                lines.AddRange(GameNodesText.Lines(d.ShopDescription(bonus.additionalDescription)));
+            return lines;
+        }
+    }
+}

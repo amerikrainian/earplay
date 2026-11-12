@@ -375,6 +375,23 @@ as the same press (`TitlePages.Back`).
     ("refreshed, 4 left"). Verified live: BREAD typed, submitted, scored 13, five new tiles named.
   - The driver cannot type into the game: call the private `KeyboardControl.OnTextInput((char)'b')`
     through `/eval` (the game's own text-input handler), one letter at a time.
+- **Modifiers and upgrades** (`Round/Drawers`, stops of the round between the board and the status,
+  present once one is owned; the drawers need not be open, their buttons answer either way):
+  - Modifiers: `BonusInventory.allModifierStubs` with `hasAPurchasedModifer`, in sibling order (the
+    drawer's, which is the scoring order): the stub text (`myDescription`, "Refresh on New Round"), the
+    score badge when `wordScoreArea` shows, "disabled" by `disabledOverlay`; the control buffer is the
+    card's `shopDescription` then its `additionalDescription` text. Enter is `ToggleCard` (slides out
+    Sell, and focus lands on it once the slide's tween sets `sellIconIsShowing`, polled while
+    `stubIsMoving`); while `sellIconIsShowing` a "Sell, +1" node (`sellAmount`'s two lines) follows the card,
+    Enter on it `SellStub`, then the refreshes line. Reordering is not offered yet.
+  - Upgrades: `allUpgradeStubs` with `hasAPurchasedUpgrade`: stub text, "3 of 4 uses left"
+    (`UpgradeGetNumberLeft` of `UpgradeMaximum` + `extraUpgradePoints`), "picking a tile" while it
+    waits. Enter: `PlayerClickedUpgrade` (the game's "Pick a tile to upgrade", then Enter on a tile
+    is the game's own press in that mode, `ControllerInteractTile` -> `SendToUpgradeCard`); a
+    `HasButton` upgrade calls `TriggerBonusButtonScript` directly (the game's press reaches it only
+    in keyboard/controller control type, which focus mode never sets). Escape on the round cancels
+    the pick (`CancelClickToUpgradeMode`). The Swap Tile picker (`PickTileManager`, zone
+    TilePicker) is not covered yet.
 - **Shop** (`Screens/Game/ShopScreen`, while `ShopManager.shopIsShowing` and the zone is Shop): its
   title ("Round 1 Complete", `shopTitleText`) names the screen; ONE stop: the plays the round
   brought ("+4 Plays", `livesOnNewRoundPop`), the cards (`upgradeCards`) as one row: kind, rarity,

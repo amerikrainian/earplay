@@ -56,6 +56,8 @@ namespace Earplay.Module.Round
         {
             Add(new BoardSection());
             Add(new WordSection());
+            Add(new ModifiersSection());
+            Add(new UpgradesSection());
             Add(new StatusSection());
         }
 
@@ -75,10 +77,19 @@ namespace Earplay.Module.Round
 
         protected override IEnumerable<ElementAction> OwnActions()
         {
-            // Escape puts a held tile down; with none held it opens the Options drawer.
-            yield return new ElementAction(ActionIds.Back, TileSwap.Holding ? Strings.Get("bind.round.putdown") : Strings.TitleOptions, _ =>
+            // Escape puts a held tile down, or cancels an upgrade's tile pick; otherwise it opens the
+            // Options drawer.
+            bool picking = ControlManagerScript.Instance != null && ControlManagerScript.Instance.inUpgradeTileSelectMode;
+            yield return new ElementAction(ActionIds.Back,
+                TileSwap.Holding ? Strings.Get("bind.round.putdown") : picking ? Strings.Get("bind.round.cancelpick") : Strings.TitleOptions, _ =>
             {
                 if (TileSwap.Holding) { TileSwap.Cancel(); return; }
+                if (ControlManagerScript.Instance != null && ControlManagerScript.Instance.inUpgradeTileSelectMode)
+                {
+                    ControlManagerScript.Instance.CancelClickToUpgradeMode(hideText: true);
+                    Speech.Say(Strings.UpgradeCancelled, interrupt: true);
+                    return;
+                }
                 if (Round.CanInteract && TopDrawerManager.Instance != null) TopDrawerManager.Instance.ToggleOptionsDrawer();
             });
             yield return new ElementAction(ClearAction, Strings.Get("bind.round.clear"), _ => ClearWord());

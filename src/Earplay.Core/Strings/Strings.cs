@@ -133,6 +133,16 @@ namespace Earplay.Core.Strings
             D("round.board", "Board"),
             D("round.word", "Word"),
             D("round.status", "Status"),
+            D("round.modifiers", "Modifiers"),
+            D("round.upgrades", "Upgrades"),
+            // A modifier's Sell when the game's own text is missing.
+            D("modifier.sell", "Sell"),
+            // An upgrade's uses: {0} = left, {1} = all it has.
+            D("upgrade.uses_left", "{0} of {1} uses left"),
+            // The upgrade waiting for a tile (after Enter on it, until a tile is chosen or Escape).
+            D("upgrade.picking", "picking a tile"),
+            D("upgrade.cancelled", "upgrade cancelled"),
+            D("bind.round.cancelpick", "Cancel the upgrade"),
             // A board cell: what it holds, then its column and row (1-based, row 1 at the top).
             // {0} = what it holds, {1} = column, {2} = row.
             D("cell.at", "{0}, {1} {2}"),
@@ -408,6 +418,12 @@ namespace Earplay.Core.Strings
         public static string RoundBoard => Get("round.board");
         public static string RoundWord => Get("round.word");
         public static string RoundStatus => Get("round.status");
+        public static string RoundModifiers => Get("round.modifiers");
+        public static string RoundUpgrades => Get("round.upgrades");
+        public static string ModifierSell => Get("modifier.sell");
+        public static string UsesLeft(int left, int all) => F("upgrade.uses_left", left, all);
+        public static string UpgradePicking => Get("upgrade.picking");
+        public static string UpgradeCancelled => Get("upgrade.cancelled");
         public static string CellAt(string what, int column, int row) => F("cell.at", what, column, row);
         public static string CellEmpty => Get("cell.empty");
         public static string CellLockedSlot => Get("cell.locked_slot");
