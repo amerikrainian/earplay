@@ -224,6 +224,9 @@ namespace Earplay.Core.Strings
             D("breakdown.total_changed", "total {0}"),
             // The plays bar's popup; {0} = its text ("-1", "+3").
             D("breakdown.plays", "plays {0}"),
+            // The Swap Tile picker, when its title is missing; {0} = the tile it replaces.
+            D("screen.picker", "Swap Tile"),
+            D("picker.replacing", "replacing {0}"),
             // The letter bag: {0} = how many tiles.
             D("bag.remaining", "in the bag, {0}"),
             D("bag.spent", "spent this round, {0}"),
@@ -485,6 +488,8 @@ namespace Earplay.Core.Strings
         public static string Sorted => Get("event.sorted");
         public static string Refreshed(int left) => F("event.refreshed", left);
         public static string BagRemaining(int n) => F("bag.remaining", n);
+        public static string ScreenPicker => Get("screen.picker");
+        public static string PickerReplacing(string tile) => F("picker.replacing", tile);
         public static string BreakdownTile(string tile, int points) => F("breakdown.tile", tile, points);
         public static string BreakdownEmerald => Get("breakdown.emerald");
         public static string BreakdownGolden(int n) => F("breakdown.golden", n);

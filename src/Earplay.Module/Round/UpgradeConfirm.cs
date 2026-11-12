@@ -11,7 +11,8 @@ namespace Earplay.Module.Round
     /// or its word slot) and only then resumes. The hook notes the tile and its board spot, waits for
     /// interaction to resume, and re-reads the tile as landing on it reads it ("A, 1 point, diamond",
     /// with its coordinates on the board). A tile picker upgrade (Swap Tile) opens the game's letter
-    /// picker instead, and is not read here.
+    /// picker first; the letter chosen there reaches <c>UpgradeStubScript.ChangeTile</c>, hooked the
+    /// same way.
     /// </summary>
     internal static class UpgradeConfirm
     {
@@ -31,6 +32,19 @@ namespace Earplay.Module.Round
                 if (openTilePicker) return;
                 var spot = myTile.myHolder;
                 Later.Frames(10, () => WaitThenRead(myTile, spot, MaxTries), "upgrade result");
+            }
+        }
+
+        // A letter picked in the Swap Tile picker: the tile is swapped for it, then read the same way.
+        [HarmonyPatch(typeof(UpgradeStubScript), nameof(UpgradeStubScript.ChangeTile))]
+        private static class Changed
+        {
+            private static void Prefix(TileScript myTile)
+            {
+                if (myTile == null) return;
+                Pending = myTile;
+                var spot = myTile.myHolder;
+                Later.Frames(10, () => WaitThenRead(myTile, spot, MaxTries), "picker result");
             }
         }
 

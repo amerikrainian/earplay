@@ -405,8 +405,14 @@ as the same press (`TitlePages.Back`).
     drag-and-drop route ("can't move N there" when no `UpgradeTile` follows). Every route ends in
     `UpgradeStubScript.UpgradeTile`, which `Round/UpgradeConfirm` hooks: it notes the tile and its
     board spot (`myHolder`), waits for interaction to resume (the coroutine resumes it after putting
-    the tile back), and re-reads the tile as landing on it reads it ("A, 1 point, diamond, 3 1"). The Swap Tile picker (`PickTileManager`, zone
-    TilePicker) is not covered yet.
+    the tile back), and re-reads the tile as landing on it reads it ("A, 1 point, diamond, 3 1"). The Swap Tile picker is `Round/PickerScreen`.
+- **Swap Tile picker** (`Round/PickerScreen`, zone TilePicker while `PickTileManager.pickerCG` is
+  interactable; opened by a Pick a Vowel / Pick a Consonant upgrade, `UpgradeTile(openTilePicker)`):
+  a modal under its title ("Swap Tile"): "replacing E, 1 point" (`tileIWillChange`), the letters as
+  one row (`tileButtons`, `tileTMPs`, `scoreTMPs`: "B, 3 points", disabled when the bag has none),
+  Enter picks (the button's `PickTile`), then Cancel; Escape is `PickTileManager.Cancel` (the tile
+  back unchanged). The pick reaches `UpgradeStubScript.ChangeTile`, which `UpgradeConfirm` also
+  hooks, so the swapped tile is re-read.
 - **Shop** (`Screens/Game/ShopScreen`, while `ShopManager.shopIsShowing` and the zone is Shop): its
   title ("Round 1 Complete", `shopTitleText`) names the screen; ONE stop: the plays the round
   brought ("+4 Plays", `livesOnNewRoundPop`), the cards (`upgradeCards`) as one row: kind, rarity,
