@@ -1,5 +1,7 @@
 using System;
+#if DEBUG
 using Earplay.Dev;
+#endif
 using Earplay.Modularity;
 using UnityEngine;
 

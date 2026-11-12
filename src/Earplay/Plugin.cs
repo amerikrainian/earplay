@@ -2,7 +2,9 @@ using System.IO;
 using BepInEx;
 using BepInEx.Logging;
 using Earplay.Contracts;
+#if DEBUG
 using Earplay.Dev;
+#endif
 using Earplay.Host;
 using Earplay.Modularity;
 using Earplay.Speech;
