@@ -164,7 +164,7 @@ namespace Earplay.Core.Strings
             D("tile.locked", "locked"),
             // A locked tile and the words left on its countdown; {0} = that count.
             D("tile.locked_count", "locked, {0} words"),
-            D("tile.mandatory", "mandatory"),
+            D("tile.mandatory", "highlighted"),
             D("tile.stuck", "stuck"),
             // The odd tiles, which have no letter to read.
             D("tile.wildcard", "wildcard"),
