@@ -113,6 +113,10 @@ namespace Earplay.Core.Strings
             // Screen names, spoken on entering a screen.
             D("screen.main_menu", "Main menu"),
             D("screen.help", "Keys here"),
+            // The main menu's caption-less icon buttons.
+            D("title.options", "Options"),
+            D("title.full_screen", "Full screen"),
+
             // The mod's own menu (Ctrl+Shift+M).
             D("screen.mod_menu", "Earplay"),
             D("mod.settings", "Settings"),
@@ -298,6 +302,8 @@ namespace Earplay.Core.Strings
             => Has("bind." + actionKey) ? Get("bind." + actionKey) : fallback;
 
         public static string ScreenMainMenu => Get("screen.main_menu");
+        public static string TitleOptions => Get("title.options");
+        public static string TitleFullScreen => Get("title.full_screen");
         public static string ScreenHelp => Get("screen.help");
         public static string ScreenModMenu => Get("screen.mod_menu");
         public static string ModSettings => Get("mod.settings");

@@ -140,6 +140,8 @@ namespace Earplay.Module
 
         private static void RegisterScreens()
         {
+            // The title scene's pages, one screen each, active while the scene's control zone names it.
+            ScreenManager.Register(new Screens.Title.MainMenuScreen());
             ScreenManager.Register(new ModMenuScreen());
             ScreenManager.Register(new HelpScreen());
         }
