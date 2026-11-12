@@ -1,0 +1,332 @@
+# Earplay — Accessibility Mod for Word Play
+
+Screen-reader accessibility mod for blind players of Word Play (Game Maker's Toolkit). Speaks UI
+focus, menus, and (later) the round, the tiles, the shop and the modifiers via Prism. Ported from
+guildrun-access (`C:\Users\CRNTJR3\cs\guildrun_access`): the host/module hot reload, the key-graph
+navigator, the buffers, the key help, the dev server with its Roslyn REPL; reuse its patterns where
+they fit. Speech is the sole interface: a silent failure is invisible to the player, so every catch
+logs, and nothing caches game state.
+
+## Game facts
+- **Engine**: Unity **2022.3.50f1**, **Mono** (MonoBleedingEdge), x64. Game code is plain IL in
+  `Word Play_Data\Managed\Assembly-CSharp.dll` (~490 KB, ~300 types, global namespace, unobfuscated);
+  the assemblies are built against **.NET Standard 2.1**, so the host and the module target
+  `netstandard2.1`. No interop proxies: game types are referenced directly, private fields are read
+  through `Module/Interop/Private` (see Hard rules).
+- **Install**: `C:\Program Files (x86)\Steam\steamapps\common\Word Play` (Steam app **3586660**). The
+  build resolves it itself (`Directory.Build.props`: `-p:GameDir=`, a gitignored
+  `Directory.Build.local.props`, `WORDPLAY_DIR`, the Steam registry, the default path).
+- **Game code**: one `MonoBehaviour` per concern, most of them a singleton behind a static
+  `Instance` set in `Awake` (`TitleScreenManager`, `ControlManagerScript`, `MetaGameRules`,
+  `LogicManagerScript`, `ShopManager`...); upgrades and modifiers are one class each (`u*.cs`). Two
+  scenes: `Title` and `Game` (`NavigationManager.titleScreenScene` / `gameScreenScene`), switched by
+  EasyTransition's `TransitionManager`. UI is **uGUI + TextMeshPro**, animated by **DOTween**, many
+  labels driven by **Febucci TextAnimator**, which leaves its markup in `TMP_Text.text`
+  (`<noparse></noparse>`, `<wave>`, `<b>`): `TextFilter.Clean` strips it at speak time, and `/nav`
+  shows it raw.
+- **Input**: the **new Input System** through a `PlayerInput` (`ControlManagerScript.pi`) whose
+  actions call the game's `InputAction.CallbackContext` handlers (`TitleControl.GoBack`,
+  `KeyboardControl.*Key`), with **legacy Input also enabled**, so `UnityEngine.Input.GetKey(KeyCode)`
+  works (verified). Typing a word in a round reads `Keyboard.current.onTextInput`
+  (`KeyboardControl.OnEnable`), which a disabled keyboard device never raises: see Roadmap.
+- **Modding framework**: **BepInEx 5.4.23.5** (Mono), vendored unpacked in `third_party/bepinex/`
+  (`setup-bepinex.ps1` copies it into the game folder). HarmonyX 2.9, Mono.Cecil 0.10.4 in its core.
+  No first-launch step: the build compiles against the game's `Managed` folder directly.
+- **Speech**: Prism (`third_party/prism/prism.dll`, deployed next to `Word Play.exe`) via
+  hand-written P/Invoke in the host (`src/Earplay/Speech/`). Prism talks to NVDA/JAWS/SAPI itself.
+- **Language**: English only. No Unity Localization, no locale: the mod's strings are English with
+  one override file (see Strings). If the game ever gains languages, port guildrun's `LanguageSync`.
+- **Saves**: `%LocalAppData%Low\Game Maker's Toolkit\Word Play\` (`Application.persistentDataPath`):
+  `fullgamemetasavedata.json` (`MetaGameSave`: progression, records, unlocks; `MetaGameRules`
+  holds them live: `levelCompletion[]`, `highestScore[]`, `fewestWordsUsed[]`, indexed by mode id),
+  `resumesavefile.json` (`SaveData`: the run in progress, `MetaGameRules.hasInProgressData`), and
+  PlayerPrefs (the options: `axlowercase`, `axfont`, `MasterVolume`..., `consented`). The options
+  page's Delete Save wipes all of it and reloads the title scene: never press Sure? for the player.
+- **Mode ids** (`MetaGameRules.currentRule`, `LevelSelectScript.levelNames` index): 1 Easy, 2 Normal,
+  3 Hard, 4 Legendary, 5 Marathon, 6 Quick Play, 7 Daily Challenge, 8 Ultramarathon (shown once 1-5
+  are beaten); 0 is unused (`PlayGame(0)` resumes the saved run). 2-5 unlock when Easy is beaten.
+
+## Decompiled reference
+- `game/decompiled/` — ilspycmd's decompile of `Assembly-CSharp.dll`, one `.cs` per type, WHOLE
+  method bodies (Mono IL decompiles cleanly). Gitignored: decompiled game code is never committed;
+  regenerate with `uv run python tools/python/dump_game.py`. **Read the body before guessing a
+  rule**: grep it (`Grep` over `game/decompiled`), it is the source of truth for what a method does.
+- `game/analysis/version.json` — the Steam build id and `Assembly-CSharp.dll` stamp the decompile
+  came from, so a stale reference is visible.
+- Plugin assemblies (DOTween, SimpleScrollSnap, MyBox, TextAnimator) decompile the same way with
+  `ilspycmd <dll>` when a screen needs one.
+- For live behaviour use the game: `GET /gui` for structure, `POST /eval` for values (Dev driver).
+
+## Tools (`tools/python/`, standard library only; run them with `uv run python tools/python/<tool>.py`)
+- `dump_game.py [--keep] [--diff]` — after a game update: decompile again (ilspycmd, `dotnet tool
+  install -g ilspycmd`), record the build id; `--keep` parks the old decompile as
+  `game/decompiled.prev`, `--diff` lists the files the update added, removed or changed (the first
+  pass at what to re-read). Then `dotnet build`: a renamed member fails the build.
+- `dev.py <cmd>` — the dev server from the command line: `launch [--direct] [--mute]`, `kill`,
+  `reload`, `nav`, `input ui.down ui.activate`, `speech --tail 20`, `log --grep X`, `gui --grep RE
+  --context 3`, `eval file.cs`, `wait "<bool expr>"`, `typeinfo Name`, `actions`, `module`,
+  `screenshot out.png`, `click [x y]` (an OS click at Unity screen coordinates). `launch --direct`
+  runs `Word Play.exe` itself (Steam's launch drops the environment; `SteamAppId` keeps Steamworks
+  from relaunching through Steam), `--mute` adds `EARPLAY_NO_SPEECH=1`.
+
+Typical update loop: `dump_game.py --diff` -> re-read what it lists that the module touches ->
+`dotnet build` -> `dev.py launch` -> drive the screens.
+
+## Build & deploy
+```
+dotnet build            # or .\build.ps1
+```
+Debug build compiles all five projects and deploys host + Contracts + Roslyn deps + Core + Module
+(DLLs and PDBs) to `<game>\BepInEx\plugins\Earplay\` and `prism.dll` next to `Word Play.exe`. **A
+HOST or Contracts change needs the game closed** (their DLLs are locked) and a relaunch.
+**Core/Module changes need NO restart**: `dotnet build src/Earplay.Module/Earplay.Module.csproj`
+(or `.\build.ps1 -ModuleOnly`) copies just those, then `curl -X POST 127.0.0.1:8772/reload` or **F6**
+in-game (`GET /module` shows the generation and the DLL write times, so a stale deploy is visible).
+
+- First-time setup: `.\setup-bepinex.ps1`, then build.
+- Launch: `& "C:\Program Files (x86)\Steam\steam.exe" -applaunch 3586660`, or `dev.py launch
+  --direct --mute` for an unattended run. Kill from the Bash tool:
+  `MSYS_NO_PATHCONV=1 taskkill.exe /F /IM "Word Play.exe"`. Wait for the dev server with
+  `curl -s --retry 40 --retry-connrefused --retry-delay 2 --retry-all-errors http://127.0.0.1:8772/health`.
+- Tests: `dotnet test src/Earplay.Tests/Earplay.Tests.csproj` (Core + Contracts; no game).
+- Release: `dotnet build -c Release` compiles without deploying, and without the dev server (its
+  sources are excluded and Roslyn is not referenced). Release packaging, the installer and the
+  manual are not ported yet; guildrun's `build_release.ps1`, `installer\` and `docs_src\` are the
+  pattern when the first release is due.
+
+## Logs
+Our lines go through the BepInEx logger with an `[Earplay]` source into
+`<game>\BepInEx\LogOutput.log` (truncated each launch), and in-band via `GET /log?since=N&grep=S`.
+The game's own `Debug.Log` lines do NOT reach that file (or `/log`) in this setup: they are in Unity's
+`%LocalAppData%Low\Game Maker's Toolkit\Word Play\Player.log` (the previous run's in
+`Player-prev.log`), which is how a game-side rule shows ("Haven't played today's daily challenge",
+"Changing control type to Keyboard"). BepInEx boot problems are at the top of `LogOutput.log`.
+
+## Navigation strategy (decided)
+**Custom keyboard navigation over the live uGUI widgets** — NOT the game's own EventSystem selection.
+We build a key graph per screen from the live views (`Build(GraphBuilder)`, immediate mode: declared
+fresh every render, focus persisting by `ControlId` identity), read labels from TMP text at speak time,
+and activate through the widget's own event (`button.onClick.Invoke()`), so the game's handler runs as
+for a click. While focus mode owns the keyboard, `FocusMode` mutes uGUI navigation events
+(`EventSystem.sendNavigationEvents = false`) and clears the selection. Screens resolve their activity
+from the game's own state, never by scanning: a singleton's `Instance` (Unity's null check: a
+destroyed singleton from a previous scene compares equal to null) and the fields it holds.
+`FindObjectOfType` / `Resources.FindObjectsOfTypeAll` are for `/eval` and the dev audit only.
+
+**Tab-stops**: Tab and Shift+Tab always wrap round a screen's stops; on a screen with one stop they
+do nothing at all (consumed, silent). A context names its group by its label alone: there is no
+"list" role word.
+
+## Architecture — HOST/MODULE split (hot reload; the guildrun pattern on Mono)
+Five projects:
+- **`Earplay.Contracts`** (netstandard2.0, PERMANENT): `IModHost`, `IModModule`, `IDevDriver`,
+  `ISpeechBackend`, `SpeechPipeline`, `ISettingsStore`/`ModSettings`, `TextFilter`. Loaded once, by
+  name; everything the host holds is typed here.
+- **`Earplay`** (netstandard2.1, PERMANENT host; **changing it needs a game restart — keep it
+  minimal**): `Plugin` (the `BaseUnityPlugin` entry), `Speech/` (Prism), `Host/HostPump` (the one
+  MonoBehaviour, on its own `DontDestroyOnLoad` GameObject), `Modularity/ModuleLoader`,
+  `BepInExSettingsStore`, `Dev/` (dev server). The host must NEVER reference Core at compile time.
+- **`Earplay.Core`** (netstandard2.0, RELOADABLE, engine-free, unit-tested): `Graph/` (the key-graph
+  engine: `KeyGraph`, `GraphBuilder`, `GraphAnnouncer`, `ControlId`), `UI/` (`GraphNavigator`,
+  `GraphSheet`, `ControlTypes`, `TypeAheadSearch`, `KeyHelp`, `EditEcho`), `Input/` (`InputManager`
+  categories + chord shadowing), `Screens/` (`Screen`, `CompositeScreen` + `ScreenSection`,
+  `ScreenManager`, `ChoiceSubmenuScreen`), `Buffers/`, `Strings/` (the authored strings table).
+  Engine seams are statics the module sets in Load: `CoreLog`, `Speech.Speak`, `NavInput.Current`,
+  `Navigation.FocusActive`, `InputManager.FocusActive`, `GraphAnnouncer.PositionText/ExpandedStateText`.
+- **`Earplay.Module`** (netstandard2.1, RELOADABLE, engine-coupled; **day-to-day feature work goes
+  here**): `ModuleMain` (IModModule + IDevDriver: seams, input registration, screen registration,
+  focus mode, Tick), `Screens/Title/` (the title scene's pages, below), `Screens/` (the key help, the
+  mod menu), `UI/GameNodes` (node factories over uGUI Button/Toggle/Slider/TMP_Dropdown/TMP),
+  `UI/FocusMode`, `UI/Buffers`, `UI/TextEdit`, `Input/KeyboardBinding` + `UnityNavInput`,
+  `Interop/Private`, `Dev/ScreenAudit`. A long screen decomposes into sections when they carry state
+  or act on each other; a screen that only reads one panel stays whole (never partial classes).
+- **`Earplay.Tests`** (net8.0 xUnit): Core + Contracts only; runs serially (static seams).
+
+**The loader on Mono** (`Modularity/ModuleLoader`): Mono has no collectible load contexts, so every
+generation is a fresh pair of assemblies in the one AppDomain and the old pair stays loaded (a few
+hundred KB a reload). Mono binds a reference by NAME to an assembly of that name it already has, and
+BepInEx 5's own `AssemblyResolve` handler (registered before ours) searches the plugins folder
+recursively for `<name>.dll` and would load Core from disk by path. So before loading, Mono.Cecil
+renames each generation's pair (`Earplay.Core.g3`, `Earplay.Module.g3`, the module's reference to Core
+rewritten to match) and rewrites the portable PDB beside each so stack traces keep their line numbers;
+the names are unique, so a reference can only bind to this generation's copy, which the loader's own
+resolve hook hands back. Namespaces and type names are untouched. Verified: after a reload
+`ModuleMain`'s assembly is `Earplay.Module.g2` referencing `Earplay.Core.g2`, the g1 pair still loaded
+beside it. The REPL compiles against the live generation's images (`ModuleLoader.CoreImage /
+ModuleImage`), so `/eval` reaches `Earplay.Module.ModuleMain.Host` and every Core static.
+
+Rules: new feature/screen/adapter/patch code goes in Module (Core when engine-free). Only entry, native
+handles, sockets, and component types go in the host (a component type defined in a byte-loaded
+module would be a new type every generation). Module Harmony uses a per-load GUID id and
+`UnpatchSelf()` in Dispose. The host loads the NEW generation BEFORE disposing the old one
+(failed-reload safety) and sets `IModHost.SuccessorLoaded` around the old Dispose: a disposing module
+restores suppressed game state (the keyboard device, EventSystem navigation) only when that flag is
+false (a shutdown), and just drops its hooks on a reload. Core statics are per-generation.
+
+## Dev driver (Debug only; on by default, `EARPLAY_NO_DEV=1` disables, `EARPLAY_DEV_PORT` sets the port)
+Loopback HTTP on `http://127.0.0.1:8772` (guildrun's is 8771, so both can run), driven with curl.
+`EARPLAY_NO_SPEECH=1` skips Prism for headless runs; spoken text is still captured. The game keeps
+running when unfocused.
+- `POST /input` body = `up|down|left|right|confirm|back|tab|prev|home|end|secondary|tooltip|read` or any
+  registered action key (`ui.down`, `mod.focus`, `mod.help`): routed through the module's real
+  dispatch, exactly like a key press; the response echoes the new focus readout. `GET /actions` lists
+  the keys. Before a `confirm`, read the readout the previous input returned: a guessed focus has
+  toggled full screen on the main menu, and the options page's Sure? deletes every save.
+- `GET /nav` our navigator's state (focus mode, screen stack, focused node, every node in the render).
+- `GET /gui` raw uGUI hierarchy (paths, components, TMP text, CanvasGroup alpha) to reverse-engineer a
+  screen; `GET /focus` the game's own uGUI selection. Diff `/gui` against `/nav` to find what we miss.
+  The title scene keeps all five pages active at once: `/gui` lists them all, alpha tells them apart.
+- `GET /speech?since=N` what the mod spoke, tagged interrupt/queue and speaking class (`&wait=MS`
+  long-polls); `GET /log?since=N&grep=S`.
+- `POST /eval` C# against the live game (Roslyn scripting on Mono; state persists; references every
+  loaded assembly, every DLL in the game's `Managed` folder, and the live Core and Module from their
+  images); `POST /wait?timeout=MS` a per-frame bool expression; `GET /typeinfo?name=X` (declared
+  members, private ones included); `GET /screenshot`. Private fields in `/eval`: reflection,
+  `typeof(T).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(obj)`. A button's
+  wiring: `button.onClick.GetPersistentTarget(i)` / `GetPersistentMethodName(i)` (most of the title's
+  buttons are wired in the scene, not in code).
+- Roslyn 4.8's netstandard2.0 build needs `System.Memory`, `System.Buffers`,
+  `System.Numerics.Vectors` and `System.Threading.Tasks.Extensions` as ASSEMBLIES, which a
+  netstandard2.1 restore treats as inbox and never copies (the game's mscorlib has the types, not the
+  assemblies): the host references them `ExcludeAssets="compile"`, runtime copies only. Without them
+  the first eval throws a `FileNotFoundException` for System.Memory 4.0.1.2.
+- `POST /reload`, `GET /module` (generation, DLL write times, Harmony patch table), `GET /health`.
+- `POST /input` with body `dev.audit` (`Module/Dev/ScreenAudit`) is the coverage report of the screen
+  on show: every node of the render with its buffer lines, then the visible texts and interactable
+  widgets none of that covers. Substring matching over tag-stripped text, so it over-reports: a listed
+  text is a lead, not a verdict (a widget with no caption, such as an icon button, always lists). It
+  scans the scene, so it is for the dev driver only. The main menu's expected leftovers: the logo's
+  letter tiles, the tip's two arrow buttons (Left/Right on the tip), the two icon buttons the mod names.
+- `POST /input` with `dev.type:TEXT` (`UnityNavInput.InjectTyped`): TEXT reads as typed on the next
+  frame by type-ahead.
+- The launch update check (`Module/UpdateChecker`, `Core/UpdateCheck`) asks `amerikrainian/earplay`'s
+  latest GitHub release and logs "update check: failed (404 (Not Found))" until the repository has
+  one; that warning is expected.
+
+## Keys (focus mode on at launch; Ctrl+Shift+A toggles it)
+F1 is the key help (below). Arrows navigate, Tab/Shift+Tab cycle control groups (always wrapping),
+Enter activates, Backspace is the secondary action, Escape backs out (a page's Back button on the
+title scene), Home/End jump, Alt+Up/Down jump sections, Left/Right adjust a slider or a stepper (the
+tip, the font), typing letters searches the focused group. Ctrl+arrows review the buffers (below).
+Ctrl+Shift+M opens the mod menu (settings, all keys). F6 reloads the module (Debug).
+
+**Key help (F1, `Module/Screens/HelpScreen`, `Core/UI/KeyHelp`)**: the keys that would do something
+RIGHT NOW, for the focused screen and control. An action is listed when a key of it is live
+(`InputManager.IsLive`: category active, chord unshadowed) and something answers it: the navigator
+asked without acting (`Navigator.WouldHandle`: an arrow with a transition that way, Enter on a node
+with `OnActivate`, Tab only with two stops or more, any key the focused screen offers through
+`GetActions`), else its own handler when `InputAction.IsAvailable`. So a handler key that is silent
+somewhere must say so with `.When(...)`. A key the screen offers reads by the SCREEN's label. Enter on
+a row runs the key as a press would. The mod menu's "All keys" is the unconditional list.
+
+## Buffers (the Harkest Dungeon pattern: `Core/Buffers`, `Module/UI/Buffers`)
+Review lists for the information a focus announcement leaves out, read live on every keypress:
+Ctrl+Right/Left switch buffers (speaking "name: current line"), Ctrl+Up/Down step lines. Empty buffers
+are skipped; a focus change re-homes review to the control's buffer. So far one buffer, **control**:
+the focused node's head line (label, value, state, never the role word or the position), then one line
+per description part and per `NodeVtable.Details` line (`Core/Buffers/NodeLines`). The round's lists
+(the word log, the letter bag, the owned modifiers) join it as their screens land. A detail line is
+ONE fact; helpers return `List<string>`; a node's details go in `Details = () => ...`, never spoken
+directly.
+
+## Strings (`Core/Strings/Strings.cs`, `lang/`)
+Every mod-authored word is a key in `Strings.Defaults` with its English value; typed accessors read it.
+Word Play is English only, so there is no language following: `ModuleMain.LoadStrings` reads
+`lang/strings.txt` beside the plugin when it exists (key=value, the `{n}` slots kept), at load and on
+every reload, and logs what it set aside (`TranslationReport`). `lang/en.txt` is
+`Strings.DumpTemplate()`, the starting point for that file: after adding or rewording a string, run
+the tests once with `EARPLAY_WRITE_LANG_TEMPLATE=1` (`LangTemplateTests` fails while it lags). Key
+names in the key help ("Ctrl+Shift+A", "Up Arrow") are not translated.
+
+## Settings (`Contracts/ModSettings`, the host's BepInEx config)
+`<game>\BepInEx\config\com.amerikranian.earplay.cfg`, owned by the host so values survive reloads,
+edited in the mod menu's Settings: `focus_mode_on_launch` (default on) and `speak_positions` (list
+positions, "2 of 5": default OFF). A new default reaches only a fresh config: BepInEx writes the
+bound value the first time and keeps it.
+
+## The title scene (`Module/Screens/Title/`)
+Five pages under one canvas, all active at once; `TitleScreenManager.OpenPage` cross-fades their
+CanvasGroups and first sets `TitleControl.currentControlZone` (the manager's private `controlScript`)
+to the incoming page. That zone is the one fact of which page is the player's: each page screen is
+active exactly while it names it (`TitlePages.Showing`). Each page but the logo page has a direct
+child "Back Button" wired to `ReturnToHome`, which the game's Escape (`TitleControl.GoBack`, a
+PlayerInput callback, deaf while focus mode disables the keyboard) presses; our screens offer Escape
+as the same press (`TitlePages.Back`).
+- **Main menu** (`MainMenuScreen`, the logo page `logoGO`): stop one, "Main menu": the "Buttons"
+  column in its order (Play, Resume Run, Extras, Quit; Resume Run greyed out without a saved run, and
+  with one the resume bubble's "Classic, Round 3", `resumeText`, read as its description), the Daily
+  Challenge tile while the game offers it (its `DCcanvasGroup` interactable: Easy beaten and
+  `dailyChallengeExists`, off in this build), read as its label, the date ("NOV 12") and its state
+  tag ("Not Played", "Resume", "4 Words", "Game Over!"); then the corner's caption-less icon buttons,
+  Options and Full screen (a toggle, its state `Screen.fullScreen` read live: the switch lands a frame
+  or more after the press). Stop two: the tip (`TipSystem.tipArea`; Left/Right are its arrow
+  buttons, `PreviousTip`/`NextTip`, the new tip the feedback) and the version line. The logo's letter
+  tiles are decoration. Play opens the level select directly in this build (`OpenLevelSelect`; the
+  consent page's `OpenConsentScreen` is wired to nothing).
+- **Level select** (`LevelSelectScreen`, `levelSelectGO` + `LevelSelectScript`): the "Picker"
+  groups, each a context named by its label ("STRATEGIC", "CASUAL"), each tile a radio button named by
+  `levelNames[i]`, `i` its index in `pickerTiles` (index 0 is an unused duplicate of Easy), the index
+  its click hands to `ChangeDetails`. Landing on a tile clicks it (`OnFocus`), so the details panel
+  follows focus and the tile reads the description and the record after its name ("Not Yet Played",
+  "Complete Easy Mode to Unlock", "Finished in 12 Words"); "locked" from `lockIcons[i]`, "completed"
+  from `goldenOverlays[i]`. Then Play (`playButton`, disabled on a locked mode) and Back.
+- **Options** (`OptionsScreen`): three stops named by their panel titles, read in visual order (the
+  hierarchy lists them right to left), then Back. Options: Toggle Full Screen (with the state), the
+  SFX and Music sliders (0 to 1, read as percent, a tenth a step; `AudioSliderController` applies
+  `onValueChanged`), the resolution dropdown (named by the mod). Accessibility: the aids are Buttons
+  whose `OptionTutorial.ticked` is TRUE when the aid is OFF (`Start` crosses the box when the pref is
+  0), read as toggles; the font switcher (`DyslexicToggle.currentInt`, 0 the game's default, read
+  off; 1 to 3 index `AXManager.fontsToUse`, read by `faceInfo.familyName`: Atkinson Hyperlegible
+  Next, OpenDyslexic, Sofia Pro Soft), Enter/Right `NextFont`, Left `PreviousController`; the example
+  tiles are a preview and are left out. More...: Report an Issue (opens the studio's page in the
+  browser) and Delete Save, whose press slides out Sure? (`MoveableButton`, listed while
+  `sureShowing`). Sure? runs `DeleteAllSaveData`.
+- **Extras** (`ExtrasScreen`): Stats ("Games Won: 0", one line per row, an empty value read blank),
+  Credits line by line, Back.
+- **Consent** (`ConsentScreen`): the analytics message line by line, No Thanks, Okay!. Never pressed
+  for the player.
+
+## Hard rules
+- **All speech through `Speech.Say`** (Core) -> the host `SpeechPipeline`; never call Prism directly.
+  Navigation moves interrupt; screen entry and feedback queue.
+- **Never cache game state.** Hold live widgets and read them at speak time.
+- **Reuse game text** wherever it exists; every mod-authored word lives in `Core/Strings/Strings.cs`
+  (keyed, overridable by `lang/strings.txt`), never inline in a Speak call.
+- **No silent failures**: every catch logs through `CoreLog` / the host logger.
+- **Announcements** (mod-authored text only; never reword game text): distinguishing word first, no
+  nav hints, no fluff, never less information. Users are expert screen-reader users: no "list" role,
+  no positions unless the player turns them on.
+- **Private game fields through `Interop/Private.Get<T>(obj, "name")`**: cached per generation, a
+  missing name logs once (the trace of a game update renaming it) and reads as the default. Public
+  fields and properties are used directly.
+- **No scene scans** in the module: reach widgets from a singleton's fields or a page object's
+  children (`transform.Find` by the hierarchy's names, checked against `/gui`).
+- In Module files with `using UnityEngine;`, alias `Screen` and `Navigation` to the Core types
+  (`UnityEngine.Screen.fullScreen` spelled out where the engine's is meant).
+- Beware `int.MinValue` "long ago" sentinels: `frameCount - int.MinValue` overflows negative and
+  disables a throttle forever. Use `-Interval` or `int.MinValue / 2`.
+
+## The game's own hotkeys
+The game's PlayerInput binds the arrows, Enter, Escape, Tab and letters (navigate, submit, back, the
+drawers, refresh, typing). While focus mode is on, `FocusMode` disables the keyboard as an Input
+System DEVICE (`InputSystem.DisableDevice`), so no game action hears a key; our own keys are polled
+through the legacy input path, which is unaffected. `InputSystem.onDeviceChange` re-disables a keyboard
+the moment anything enables it again. Turning focus mode off re-enables it. Anything a game hotkey did
+must be offered through our screens instead. A side effect worth knowing: with the keyboard device off
+the game never switches `ControlManagerScript.currentControlType` to Keyboard, so its controller arrow
+stays hidden and the mouse cursor shown.
+
+## Roadmap
+1. **(done)** Loader bring-up on Mono (BepInEx 5), host + per-generation renamed hot reload, Prism,
+   the dev server with Roslyn eval.
+2. **(done)** Graph engine + navigator + input substrate + buffers + key help in Core, ported from
+   guildrun with its tests (138); Tab always wraps, no list role, positions off by default.
+3. **(done)** The title scene: main menu, level select, options, extras, consent.
+4. The round (the `Game` scene): the tile rack, the submission row, the score bar, the word log, the
+   letter bag, the modifiers and upgrades, the shop, the end screens. **Focus mode must change
+   first**: typing a word reads `Keyboard.current.onTextInput`, which a disabled keyboard device never
+   raises, so the round cannot take guildrun's device lock. Likely shape: leave the device enabled
+   and disable the game's PlayerInput actions (or the action maps that clash with ours) instead,
+   letting letter typing reach `KeyboardControl.OnTextInput` while our navigation keys stay ours.
+5. Releases: version in `Directory.Build.props` (`0.0.1`), CHANGELOG, `build_release.ps1`, the
+   installer, the manual, on guildrun's pattern.
