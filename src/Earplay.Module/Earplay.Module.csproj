@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The reloadable feature module: screens, node factories, input bindings, focus suppression, and any
+    Harmony patches. NOT a BepInEx plugin (no [BepInPlugin]); the host loads it (with Core) by hand from
+    the DLL bytes, renamed per generation, so it can be rebuilt and reloaded without restarting the
+    game. It owns no native handles and adds no component types of its own; that permanent code stays
+    in the host. References Contracts + Core, BepInEx/Harmony and the game's assemblies (the common
+    ones in Directory.Build.props); those resolve to the already-loaded copies at runtime.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>Earplay.Module</AssemblyName>
+    <RootNamespace>Earplay.Module</RootNamespace>
+    <Nullable>disable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>$(NoWarn);CS0436</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Earplay.Contracts\Earplay.Contracts.csproj" />
+    <ProjectReference Include="..\Earplay.Core\Earplay.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The game's own code and the plugins its UI is built from. -->
+    <Reference Include="$(ManagedDir)\Assembly-CSharp.dll" Private="false" />
+    <Reference Include="$(ManagedDir)\DOTween.dll" Private="false" />
+    <Reference Include="$(ManagedDir)\SimpleScrollSnap.dll" Private="false" />
+    <Reference Include="$(ManagedDir)\MyBox.dll" Private="false" />
+  </ItemGroup>
+
+  <!--
+    Fast iteration deploy (Debug only): copy just the two reloadable DLLs (Core + Module) and their
+    PDBs into the plugin folder. All are overwrite-safe while the game runs (byte-loaded, never
+    locked), so the day-to-day loop is dotnet build on this project then POST /reload (or F6 in-game).
+    The lang files go along: a reload reads the override file again.
+  -->
+  <Target Name="DeployModule" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">
+    <PropertyGroup>
+      <CoreOut>$(RepoRoot)src\Earplay.Core\bin\$(Configuration)\netstandard2.0\</CoreOut>
+    </PropertyGroup>
+    <ItemGroup>
+      <_Reloadable Include="$(TargetPath);$(TargetDir)$(TargetName).pdb;$(CoreOut)Earplay.Core.dll;$(CoreOut)Earplay.Core.pdb" />
+      <_LangFile Include="$(RepoRoot)lang\*.txt" />
+    </ItemGroup>
+    <MakeDir Directories="$(PluginDeployDir)" />
+    <Copy SourceFiles="@(_Reloadable)" DestinationFolder="$(PluginDeployDir)" ContinueOnError="true" />
+    <Copy SourceFiles="@(_LangFile)" DestinationFolder="$(PluginDeployDir)\lang"
+          SkipUnchangedFiles="true" ContinueOnError="true" Condition="'@(_LangFile)' != ''" />
+    <Message Importance="high" Text="Earplay.Module + Core deployed -> $(PluginDeployDir)" />
+  </Target>
+
+</Project>
