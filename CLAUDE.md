@@ -242,8 +242,10 @@ names in the key help ("Ctrl+Shift+A", "Up Arrow") are not translated.
 
 ## Settings (`Contracts/ModSettings`, the host's BepInEx config)
 `<game>\BepInEx\config\com.amerikranian.earplay.cfg`, owned by the host so values survive reloads,
-edited in the mod menu's Settings: `focus_mode_on_launch` (default on) and `speak_positions` (list
-positions, "2 of 5": default OFF). A new default reaches only a fresh config: BepInEx writes the
+edited in the mod menu's Settings: `focus_mode_on_launch` (default on), `speak_positions` (list
+positions, "2 of 5": default OFF), and `speak_coordinates` (a board cell's "column row" after its
+contents, and in the new-tiles line: default on). Settings only the module reads live in
+`Module/ModuleSettings`, keyed straight into the host's store, so adding one needs no host change. A new default reaches only a fresh config: BepInEx writes the
 bound value the first time and keeps it.
 
 ## The title scene (`Module/Screens/Title/`)

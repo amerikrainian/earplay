@@ -209,6 +209,8 @@ namespace Earplay.Core.Strings
             D("mod.close", "Close"),
             D("mod.speak_positions", "Speak list positions"),
             D("mod.focus_on_launch", "Keyboard navigation on at launch"),
+            // Whether the round's board cells end with their column and row.
+            D("mod.speak_coordinates", "Speak board coordinates"),
             // {0} = the key category, one of the three names below.
             D("mod.key_category", "{0} keys"),
             // The key categories of the "All keys" list: live everywhere, on the focused screen, in a game.
@@ -450,6 +452,7 @@ namespace Earplay.Core.Strings
         public static string ModClose => Get("mod.close");
         public static string ModSpeakPositions => Get("mod.speak_positions");
         public static string ModFocusOnLaunch => Get("mod.focus_on_launch");
+        public static string ModSpeakCoordinates => Get("mod.speak_coordinates");
         public static string HelpNone => Get("help.none");
         public static string HelpRow(string label, string keys) => F("help.row", label, keys);
 

@@ -93,7 +93,8 @@ namespace Earplay.Module.Round
                 {
                     if (cell.Kind != CellKind.Tile || cell.Tile.tileIsInSubmissionQueue) continue;
                     if (before.TryGetValue(cell.Holder, out var was) && was == Key(cell.Tile)) continue;
-                    parts.Add(Strings.CellAt(Round.TileName(cell.Tile), cell.Column, cell.Row));
+                    string name = Round.TileName(cell.Tile);
+                    parts.Add(ModuleSettings.SpeakCoordinates ? Strings.CellAt(name, cell.Column, cell.Row) : name);
                 }
             return parts.Count > 0 ? Strings.NewTiles(string.Join("; ", parts)) : null;
         }

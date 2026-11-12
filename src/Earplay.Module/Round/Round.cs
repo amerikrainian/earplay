@@ -175,7 +175,7 @@ namespace Earplay.Module.Round
                 case CellKind.Empty: what = Strings.CellEmpty; break;
                 default: what = ToolLine(cell); break;
             }
-            return Strings.CellAt(what, cell.Column, cell.Row);
+            return ModuleSettings.SpeakCoordinates ? Strings.CellAt(what, cell.Column, cell.Row) : what;
         }
 
         /// <summary>A tool's name and state: "Refresh, 5 left", "Submit, disabled".</summary>
