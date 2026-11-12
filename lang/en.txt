@@ -129,6 +129,7 @@ bag.remaining=in the bag, {0}
 bag.spent=spent this round, {0}
 bind.round.clear=Clear the word
 bind.round.closegaps=Close gaps
+bind.round.refresh=Refresh, held
 bind.ui.delete=Return the tile to the board
 bind.ui.drag=Pick up or drop a tile
 bind.round.putdown=Put the tile down

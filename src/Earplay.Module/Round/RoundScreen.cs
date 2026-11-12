@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Earplay.Core;
 using Earplay.Core.Graph;
+using Earplay.Core.Input;
 using Earplay.Core.Screens;
 using Earplay.Core.Strings;
 using Earplay.Core.UI;
@@ -19,17 +20,33 @@ namespace Earplay.Module.Round
     /// off: its arrows and Space (a controller cursor we replace), Tab (close gaps: Ctrl+Backspace
     /// here), Enter (submit: Enter on the word stop or the Submit tool here), Backspace (ours: the last
     /// tile out; Shift+Backspace the whole word), Escape (ours: the Options drawer, the same toggle).
+    /// The game's tool keys are ours too, calling the game's own methods, so the key help lists them
+    /// and runs them: 2 the shuffle tool's press (Shuffle or Sort, the player's default), Shift+2 the
+    /// other (the game's hold on 2), 3 Refresh, held a second as the game wants it (a short tap gets
+    /// the game's own "Press and Hold to Refresh"; run from the key help, where nothing is held, it
+    /// refreshes at once), 8 and = the wildcard and plus tiles, offered while the board has one.
     /// No type-ahead: letters are the game's.
     /// </summary>
     public sealed class RoundScreen : CompositeScreen, IKeyboardLender
     {
         public const string ClearAction = "round.clear";
         public const string CloseGapsAction = "round.closegaps";
+        public const string ShuffleAction = "round.shuffle";
+        public const string ShuffleOtherAction = "round.shuffle.other";
+        public const string RefreshAction = "round.refresh";
+        public const string WildcardAction = "round.wildcard";
+        public const string PlusAction = "round.plus";
+
+        private const float RefreshHold = 1f;
 
         private static readonly string[] Blocked =
         {
             "Navigate", "Interact", "Nav Left", "Nav Right", "Close Gaps", "Submit Tiles", "Backspace", "Options",
+            "Shuffle Tiles", "Refresh Tiles", "Type Wildcard", "Insert Plus",
         };
+
+        // When the Refresh key went down (unscaled seconds), while it is held towards a refresh.
+        private float? _refreshSince;
 
         public RoundScreen()
         {
@@ -61,12 +78,82 @@ namespace Earplay.Module.Round
                 if (Round.CanInteract && TopDrawerManager.Instance != null) TopDrawerManager.Instance.ToggleOptionsDrawer();
             });
             yield return new ElementAction(ClearAction, Strings.Get("bind.round.clear"), _ => ClearWord());
+            bool shuffleFirst = ToolsScript.Instance == null || ToolsScript.Instance.shuffle.defaultIsShuffle;
+            yield return new ElementAction(ShuffleAction, shuffleFirst ? Strings.ToolShuffle : Strings.ToolSort, _ =>
+            {
+                if (ToolsScript.Instance != null && Round.CanInteract) ToolsScript.Instance.shuffle.ShuffleButtonOnPress();
+            });
+            yield return new ElementAction(ShuffleOtherAction, shuffleFirst ? Strings.ToolSort : Strings.ToolShuffle, _ =>
+            {
+                if (ToolsScript.Instance != null && Round.CanInteract) ToolsScript.Instance.shuffle.ShuffleButtonOnHold();
+            });
+            yield return new ElementAction(RefreshAction, Strings.Get("bind.round.refresh"), _ => StartRefresh());
+            if (BoardHas("*")) yield return new ElementAction(WildcardAction, Strings.TileWildcard, _ => SendFromBoard("*"));
+            if (BoardHas("+")) yield return new ElementAction(PlusAction, Strings.TilePlus, _ => SendFromBoard("+"));
             yield return new ElementAction(CloseGapsAction, Strings.Get("bind.round.closegaps"), _ =>
             {
                 if (!Round.CanInteract || SubmissionScript.Instance == null) return;
                 SubmissionScript.Instance.CloseAllGaps();
                 Later.Frames(20, () => Speech.Say(Strings.GapsClosed(Round.WordSoFar()), interrupt: true), "close gaps");
             });
+        }
+
+        // A real key press holds a second before refreshing, as the game's own key does; a press with
+        // no key down (the key help running it) refreshes at once.
+        private void StartRefresh()
+        {
+            var action = InputManager.Find(RefreshAction);
+            if (action != null && action.Held) _refreshSince = Time.unscaledTime;
+            else Refresh();
+        }
+
+        private static void Refresh()
+        {
+            if (ToolsScript.Instance != null) ToolsScript.Instance.refresh.PressedRefreshButton();
+        }
+
+        public override void OnUpdate()
+        {
+            base.OnUpdate();
+            if (_refreshSince == null) return;
+            var action = InputManager.Find(RefreshAction);
+            if (action != null && action.Held)
+            {
+                if (Time.unscaledTime - _refreshSince.Value < RefreshHold) return;
+                _refreshSince = null;
+                Refresh();
+                return;
+            }
+            // Let go too soon: the game's own refusal, through its message strip (which speaks it).
+            _refreshSince = null;
+            if (LastWordArea.Instance != null)
+                LastWordArea.Instance.TutorialMessage("Press and Hold to Refresh", autoHide: true, overrideSpecialRound: false, overrideLastWord: false);
+        }
+
+        // Whether the board has a tile of this letter that is free to go into the word.
+        private static bool BoardHas(string letter) => FreeTile(letter) != null;
+
+        private static TileScript FreeTile(string letter)
+        {
+            var grid = GridManagerScript.Instance;
+            if (grid == null) return null;
+            foreach (var holder in grid.tileHolders)
+            {
+                var tile = holder != null ? holder.myTile : null;
+                if (tile != null && !tile.tileIsInSubmissionQueue && !tile.fullySpent
+                    && tile.myType != SpecialTileManager.TileTypes.Locked && tile.myLetter == letter) return tile;
+            }
+            return null;
+        }
+
+        // The game's 8 and = keys: the first such tile to the word.
+        private static void SendFromBoard(string letter)
+        {
+            if (!Round.CanInteract) return;
+            var tile = FreeTile(letter);
+            if (tile == null) return;
+            tile.SendTileToSubmission();
+            if (SubmissionScript.Instance != null) SubmissionScript.Instance.TriggerSubmitSound();
         }
 
         /// <summary>The last tile added goes back to the board (the game's Backspace tap).</summary>

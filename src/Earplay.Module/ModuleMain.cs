@@ -122,6 +122,17 @@ namespace Earplay.Module
             // The round's word keys, answered by the round screen alone (no handler here).
             InputManager.Register(Round.RoundScreen.ClearAction, "Clear the word", InputCategory.UI).AddBinding(new KeyboardBinding(KeyCode.Backspace, shift: true));
             InputManager.Register(Round.RoundScreen.CloseGapsAction, "Close gaps", InputCategory.UI).AddBinding(new KeyboardBinding(KeyCode.Backspace, ctrl: true));
+            // The game's tool keys, ours on the round so the key help lists and runs them.
+            InputManager.Register(Round.RoundScreen.ShuffleAction, "Shuffle", InputCategory.UI)
+                .AddBinding(new KeyboardBinding(KeyCode.Alpha2)).AddBinding(new KeyboardBinding(KeyCode.Keypad2));
+            InputManager.Register(Round.RoundScreen.ShuffleOtherAction, "Sort", InputCategory.UI)
+                .AddBinding(new KeyboardBinding(KeyCode.Alpha2, shift: true)).AddBinding(new KeyboardBinding(KeyCode.Keypad2, shift: true));
+            InputManager.Register(Round.RoundScreen.RefreshAction, "Refresh, held", InputCategory.UI)
+                .AddBinding(new KeyboardBinding(KeyCode.Alpha3)).AddBinding(new KeyboardBinding(KeyCode.Keypad3));
+            InputManager.Register(Round.RoundScreen.WildcardAction, "Wildcard tile", InputCategory.UI)
+                .AddBinding(new KeyboardBinding(KeyCode.Alpha8)).AddBinding(new KeyboardBinding(KeyCode.Keypad8));
+            InputManager.Register(Round.RoundScreen.PlusAction, "Plus tile", InputCategory.UI)
+                .AddBinding(new KeyboardBinding(KeyCode.Equals)).AddBinding(new KeyboardBinding(KeyCode.KeypadPlus));
             // Buffer review, the Harkest Dungeon keys: Ctrl+Left/Right switch buffers, Ctrl+Up/Down step lines.
             Buffers.Init();
             InputManager.Register("buffer.next", "Next buffer", InputCategory.UI, Buffers.Controls.NextBuffer).AddBinding(new KeyboardBinding(KeyCode.RightArrow, ctrl: true));
