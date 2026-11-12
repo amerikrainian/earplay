@@ -12,12 +12,12 @@ using Screen = Earplay.Core.Screens.Screen;
 namespace Earplay.Module.Screens.Title
 {
     /// <summary>
-    /// The main menu: the title scene's logo page. Two stops. The menu: the page's buttons column
+    /// The main menu: the title scene's logo page, one stop top to bottom: the page's buttons column
     /// (Play, Resume Run, Extras, Quit, in the game's order) with the resume bubble's "Classic,
     /// Round 3" read after Resume Run, then the Daily Challenge tile while the game offers it (it shows
     /// only once Easy Mode is beaten and a challenge exists), then the corner's two icon buttons,
-    /// Options and Full screen, which carry no caption and so are named by the mod. The info stop: the
-    /// tip (Left/Right step through the tips as the panel's arrow buttons do) and the version line.
+    /// Options and Full screen, which carry no caption and so are named by the mod, then the tip
+    /// (Left/Right step through the tips as the panel's arrow buttons do) and the version line.
     /// The logo's letter tiles are decoration and are left out. Declared fresh from the live page every
     /// render; Escape has no meaning here, as in the game.
     /// </summary>
@@ -52,13 +52,11 @@ namespace Earplay.Module.Screens.Title
             AddIconButton(b, page, "Options/Options/Options Button", "title:options", () => Strings.TitleOptions, null);
             AddIconButton(b, page, "Options/Full Screen/Full Screen Toggle", "title:fullscreen", () => Strings.TitleFullScreen,
                 () => UnityEngine.Screen.fullScreen ? Strings.StateOn : Strings.StateOff, ControlTypes.Toggle);
-            b.PopContext();
-
-            b.BeginStop("info");
             AddTip(b, page);
             var version = TitlePages.TextAt(page.transform, "Text/Version Number");
             if (version != null && version.gameObject.activeInHierarchy)
                 b.AddItem(ControlId.Structural("title:version"), GameNodes.Text(() => version.text));
+            b.PopContext();
         }
 
         // Resume Run is greyed out without a saved run; with one, the bubble beside it names the mode

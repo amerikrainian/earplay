@@ -252,15 +252,15 @@ active exactly while it names it (`TitlePages.Showing`). Each page but the logo 
 child "Back Button" wired to `ReturnToHome`, which the game's Escape (`TitleControl.GoBack`, a
 PlayerInput callback, deaf while focus mode disables the keyboard) presses; our screens offer Escape
 as the same press (`TitlePages.Back`).
-- **Main menu** (`MainMenuScreen`, the logo page `logoGO`): stop one, "Main menu": the "Buttons"
+- **Main menu** (`MainMenuScreen`, the logo page `logoGO`): one stop, "Main menu": the "Buttons"
   column in its order (Play, Resume Run, Extras, Quit; Resume Run greyed out without a saved run, and
   with one the resume bubble's "Classic, Round 3", `resumeText`, read as its description), the Daily
   Challenge tile while the game offers it (its `DCcanvasGroup` interactable: Easy beaten and
   `dailyChallengeExists`, off in this build), read as its label, the date ("NOV 12") and its state
   tag ("Not Played", "Resume", "4 Words", "Game Over!"); then the corner's caption-less icon buttons,
   Options and Full screen (a toggle, its state `Screen.fullScreen` read live: the switch lands a frame
-  or more after the press). Stop two: the tip (`TipSystem.tipArea`; Left/Right are its arrow
-  buttons, `PreviousTip`/`NextTip`, the new tip the feedback) and the version line. The logo's letter
+  or more after the press), then the tip (`TipSystem.tipArea`; Left/Right are its arrow buttons,
+  `PreviousTip`/`NextTip`, the new tip the feedback) and the version line, so Tab does nothing here. The logo's letter
   tiles are decoration. Play opens the level select directly in this build (`OpenLevelSelect`; the
   consent page's `OpenConsentScreen` is wired to nothing).
 - **Level select** (`LevelSelectScreen`, `levelSelectGO` + `LevelSelectScript`): the "Picker"
