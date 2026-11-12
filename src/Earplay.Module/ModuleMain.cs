@@ -146,6 +146,8 @@ namespace Earplay.Module
             ScreenManager.Register(new Screens.Title.OptionsScreen());
             ScreenManager.Register(new Screens.Title.ExtrasScreen());
             ScreenManager.Register(new Screens.Title.ConsentScreen());
+            // The round's modal panels.
+            ScreenManager.Register(new Screens.Game.TutorialScreen());
             ScreenManager.Register(new ModMenuScreen());
             ScreenManager.Register(new HelpScreen());
         }

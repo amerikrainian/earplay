@@ -291,6 +291,14 @@ as the same press (`TitlePages.Back`).
 - **Consent** (`ConsentScreen`): the analytics message line by line, No Thanks, Okay!. Never pressed
   for the player.
 
+## The game scene (`Module/Screens/Game/`)
+- **Tutorial panel** (`TutorialScreen`, `TutorialManager.tutorialGO`, "Tutorial Screen"): the "How to
+  Play" card before the first round's tiles are dealt, and the same panel for every later lesson
+  (`AttachTutorial`). A modal (layer 30, exclusive): the title (`labelTA`'s TMP text) as the dialog
+  context, then each active part's line (`tutorialParts[i]` / `textAreas[i]`; the picture tile beside
+  each line only illustrates it), then "Got it!", which runs `ShutTutorialScreen` (the first one then
+  deals the tiles, `GridManagerScript.ReturnFromTutorial`). Escape presses it too.
+
 ## Hard rules
 - **All speech through `Speech.Say`** (Core) -> the host `SpeechPipeline`; never call Prism directly.
   Navigation moves interrupt; screen entry and feedback queue.
