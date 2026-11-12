@@ -34,6 +34,11 @@ namespace Earplay.Module.Round
         private static bool _submitting;
         private static bool _expectClear;
         private static Dictionary<TileHolderScript, string> _boardBefore;
+        private static int _quietUntil = int.MinValue / 2;
+
+        /// <summary>The word row's announcements stand down for a few frames (a keyboard move speaks
+        /// its own result).</summary>
+        public static void QuietFor(int frames) => _quietUntil = UnityEngine.Time.frameCount + frames;
 
         /// <summary>The next mass removal is the player's own clear, already spoken.</summary>
         public static void ExpectClear() => _expectClear = true;
@@ -42,7 +47,8 @@ namespace Earplay.Module.Round
         {
             var sub = SubmissionScript.Instance;
             if (sub == null) { _row.Clear(); return; }
-            bool announce = Round.Playing && Round.CanInteract && !_submitting;
+            bool announce = Round.Playing && Round.CanInteract && !_submitting
+                && UnityEngine.Time.frameCount >= _quietUntil;
             var now = sub.submittingTiles;
             if (announce && _row.Count == now.Count)
             {
@@ -167,6 +173,7 @@ namespace Earplay.Module.Round
             {
                 _submitting = true;
                 _boardBefore = BoardSnapshot();
+                TileSwap.Reset();
             }
         }
 

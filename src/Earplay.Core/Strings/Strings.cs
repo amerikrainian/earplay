@@ -200,6 +200,17 @@ namespace Earplay.Core.Strings
             D("bind.round.clear", "Clear the word"),
             D("bind.round.closegaps", "Close gaps"),
             D("bind.ui.delete", "Return the tile to the board"),
+            D("bind.ui.drag", "Pick up or drop a tile"),
+            D("bind.round.putdown", "Put the tile down"),
+            // Moving a tile by keyboard. {0} = the tile, {1} = the tile it swapped with.
+            D("swap.picked", "{0} picked up"),
+            D("swap.cant_pick", "can't pick up {0}"),
+            D("swap.put_down", "{0} put down"),
+            D("swap.swapped", "{0} swapped with {1}"),
+            D("swap.moved", "{0} moved"),
+            D("swap.cant_move", "can't move {0} there"),
+            // The tile picked up, as its board cell or word slot reads it.
+            D("tile.held", "held"),
 
             // The mod's own menu (Ctrl+Shift+M).
             D("screen.mod_menu", "Earplay"),
@@ -435,6 +446,13 @@ namespace Earplay.Core.Strings
         public static string Refreshed(int left) => F("event.refreshed", left);
         public static string BagRemaining(int n) => F("bag.remaining", n);
         public static string BagSpent(int n) => F("bag.spent", n);
+        public static string PickedUp(string tile) => F("swap.picked", tile);
+        public static string CantPickUp(string tile) => F("swap.cant_pick", tile);
+        public static string PutDown(string tile) => F("swap.put_down", tile);
+        public static string Swapped(string tile, string other) => F("swap.swapped", tile, other);
+        public static string Moved(string tile) => F("swap.moved", tile);
+        public static string CantMoveThere(string tile) => F("swap.cant_move", tile);
+        public static string TileHeld => Get("tile.held");
         public static string ScreenLevelSelect => Get("screen.level_select");
         public static string ScreenConsent => Get("screen.consent");
         public static string ScreenExtras => Get("screen.extras");

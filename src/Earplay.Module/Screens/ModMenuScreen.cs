@@ -19,12 +19,8 @@ namespace Earplay.Module.Screens
     {
         private static bool s_open;
 
-        public static void Toggle()
-        {
-            s_open = !s_open;
-            if (!s_open) return;
-            Core.Speech.Say(Strings.ScreenModMenu, interrupt: true);
-        }
+        // Opening is announced by the menu's own context ("Earplay, Settings, button"), not here.
+        public static void Toggle() => s_open = !s_open;
 
         public static void Close() => s_open = false;
 
@@ -53,7 +49,7 @@ namespace Earplay.Module.Screens
     public sealed class ModSettingsScreen : Screen
     {
         public override string Key => "mod.settings";
-        public override string ScreenName => Strings.ModSettings;
+        // No ScreenName: the settings context names the screen on entry.
         public override bool IsActive() => false; // only ever a child of the mod menu
 
         public override void Build(GraphBuilder b)
@@ -86,12 +82,10 @@ namespace Earplay.Module.Screens
                     new NodeAnnouncement(() => get() ? Strings.StateOn : Strings.StateOff, live: true, kind: AnnouncementKinds.Value),
                 },
                 SearchText = label,
-                OnActivate = () =>
-                {
-                    bool next = !get();
-                    set(next);
-                    Core.Speech.Say(next ? Strings.StateOn : Strings.StateOff, interrupt: true);
-                },
+                // The new state is spoken once, as the activation's feedback (the navigator then
+                // rebaselines the live value, so the change is not spoken a second time).
+                OnActivate = () => set(!get()),
+                StateText = () => get() ? Strings.StateOn : Strings.StateOff,
             };
         }
 
@@ -106,7 +100,7 @@ namespace Earplay.Module.Screens
     public sealed class KeyHelpScreen : Screen
     {
         public override string Key => "mod.keys";
-        public override string ScreenName => Strings.ModKeyHelp;
+        // No ScreenName: the "All keys" context names the screen on entry.
         public override bool IsActive() => false; // only ever a child of the mod menu
 
         public override void Build(GraphBuilder b)

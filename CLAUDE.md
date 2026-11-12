@@ -339,6 +339,16 @@ as the same press (`TitlePages.Back`).
   - **Status**: the score bar's "0 / 35, 35 Points Left", "ROUND 1 / 10, EASY MODE" (BarScript's
     `barLabel`, `scoreToGoTMP`, `roundText`, `leftText`, through `LogicManagerScript.scoreBarScript`),
     "PLAYS: 10" (`lifeBarScript`), refreshes, the bag count, the strip's text while it shows.
+  - **Moving a tile** (`Round/TileSwap`, Space, `ui.drag`): the first press on a board tile or word
+    slot picks its tile up (the mod notes it only: the tile stays put, its readout says "held", typing
+    still works); a press on another board tile or slot drops it through the game's own drop, the
+    gamepad drag's calls (`TileDrag.OnBeginControlDrag`, then `DropTile(target holder)`), so the
+    mouse drag's rules hold: board tiles swap, a slot takes it (an occupied one swaps), a word tile
+    dropped on the board goes back to its spot, locked and stuck tiles refuse. Every drop path ends in
+    `FinishDrop`, which clears `holdingATile` (typing is refused while it is set). Space on the held
+    tile, or Escape, puts it down. Result 25 frames on, the word row's own lines quiet meanwhile:
+    "N swapped with E", "N moved", "can't move N there" (the tile's parent unchanged: the game sent
+    it back). Verified live: a board swap and back, a drop into an empty slot, a cancel.
   - **Keys**: Backspace (every round node's secondary) the last tile out (`BackspaceButtonClick`, the
     game's LIFO list), Shift+Backspace the whole word (`BackspaceButtonHold`), Ctrl+Backspace close
     gaps (`CloseAllGaps`), Escape the Options drawer (`TopDrawerManager.ToggleOptionsDrawer`).

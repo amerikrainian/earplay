@@ -258,6 +258,7 @@ namespace Earplay.Module.Round
                     parts.Add(Strings.TileLocked(tile.mySpecialScore % 10));
                     break;
             }
+            if (ReferenceEquals(tile, TileSwap.Held)) parts.Add(Strings.TileHeld);
             if (tile.mandatory) parts.Add(Strings.TileMandatory);
             if (tile.stuckTile) parts.Add(Strings.TileStuck);
             return string.Join(", ", parts);

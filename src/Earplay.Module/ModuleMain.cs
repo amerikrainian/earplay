@@ -115,6 +115,8 @@ namespace Earplay.Module
             InputManager.Register(UiActions.End, "Jump to last", InputCategory.UI).AddBinding(new KeyboardBinding(KeyCode.End));
             InputManager.Register(UiActions.RegionPrev, "Previous section", InputCategory.UI).AddBinding(new KeyboardBinding(KeyCode.UpArrow, alt: true));
             InputManager.Register(UiActions.RegionNext, "Next section", InputCategory.UI).AddBinding(new KeyboardBinding(KeyCode.DownArrow, alt: true));
+            // Space: pick up the focused tile, then drop it on another (the game's drag, by keyboard).
+            InputManager.Register(UiActions.Drag, "Pick up or drop a tile", InputCategory.UI).AddBinding(new KeyboardBinding(KeyCode.Space));
             // Delete: the focused thing's removal (a word slot's tile back to the board).
             InputManager.Register(UiActions.Delete, "Return the tile to the board", InputCategory.UI).AddBinding(new KeyboardBinding(KeyCode.Delete));
             // The round's word keys, answered by the round screen alone (no handler here).

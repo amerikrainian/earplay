@@ -46,10 +46,18 @@ namespace Earplay.Module.Round
         // Focus survives the shop and the end of a round: back on the board where it was.
         public override bool KeepStateOnPop => true;
 
+        public override void OnPop()
+        {
+            base.OnPop();
+            TileSwap.Reset();
+        }
+
         protected override IEnumerable<ElementAction> OwnActions()
         {
-            yield return new ElementAction(ActionIds.Back, Strings.TitleOptions, _ =>
+            // Escape puts a held tile down; with none held it opens the Options drawer.
+            yield return new ElementAction(ActionIds.Back, TileSwap.Holding ? Strings.Get("bind.round.putdown") : Strings.TitleOptions, _ =>
             {
+                if (TileSwap.Holding) { TileSwap.Cancel(); return; }
                 if (Round.CanInteract && TopDrawerManager.Instance != null) TopDrawerManager.Instance.ToggleOptionsDrawer();
             });
             yield return new ElementAction(ClearAction, Strings.Get("bind.round.clear"), _ => ClearWord());
@@ -115,6 +123,7 @@ namespace Earplay.Module.Round
                         Details = () => Round.CellDetails(Fresh(c)),
                         OnActivate = Activator(c),
                         OnSecondary = RoundScreen.RemoveLast,
+                        OnDrag = c.Kind == CellKind.Tile ? () => { var now = Fresh(c); TileSwap.Press(now.Holder, now.Tile); } : (System.Action)null,
                         ExcludeFromSearch = true,
                     });
                 }
@@ -171,6 +180,7 @@ namespace Earplay.Module.Round
                     OnActivate = RoundScreen.Submit,
                     OnSecondary = RoundScreen.RemoveLast,
                     OnDelete = () => { if (Round.SlotTile(s) != null && Round.CanInteract) s.ControllerInteractTile(); },
+                    OnDrag = () => TileSwap.Press(s, Round.SlotTile(s)),
                     ExcludeFromSearch = true,
                 });
             }
