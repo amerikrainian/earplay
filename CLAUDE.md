@@ -431,6 +431,8 @@ as the same press (`TitlePages.Back`).
   text; also outside a word), the total (`BarScript.ChangeFinalScore`, parts from `SubmitWord`'s
   `wordScoreForLog` / `bonusScoreForLog`: "12 plus 10: 22"), a modifier's change to it
   (`ChangeFinalFinalScore`), the plays popup (`LifeBarScript.PopupText`, while `Round.Playing`).
+  With it on, the word's closing line names the word alone ("PADDING"), the total already given;
+  off, "PADDING: 97". Verified live on PADDING (golden tiles, two modifiers).
   The game has no score preview before submitting.
 - **Bag** (`Round/BagScreen`, Enter on the Bag tool): `LetterBagManager.LetterBag` and `SpentLetters`
   (tile id strings: letter, type code S G D P F E T L, two digits of bonus points, two of special

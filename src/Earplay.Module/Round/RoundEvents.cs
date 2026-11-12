@@ -116,7 +116,10 @@ namespace Earplay.Module.Round
                 var area = LastWordArea.Instance;
                 string word = area != null ? Private.Get<string>(area, "lastWord") : null;
                 int score = area != null ? Private.Get<int>(area, "lastScore") : 0;
-                if (!string.IsNullOrEmpty(word)) Speech.Say(Strings.WordScored(word, score));
+                // With the breakdown on, its last line already gave the total ("92 plus 5: 97"): the
+                // closing line names the word alone.
+                if (!string.IsNullOrEmpty(word))
+                    Speech.Say(ModuleSettings.ScoreBreakdown ? word : Strings.WordScored(word, score));
                 if (roundWon) Speech.Say(Strings.RoundComplete);
                 string line = Round.ScoreLine();
                 if (line != null) Speech.Say(line);
