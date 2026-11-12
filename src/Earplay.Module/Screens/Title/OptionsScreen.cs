@@ -85,9 +85,7 @@ namespace Earplay.Module.Screens.Title
                 if (slider != null)
                 {
                     var label = TitlePages.TextAt(row, "Label");
-                    b.AddItem(ControlId.Structural(key), GameNodes.Slider(slider,
-                        () => label != null ? label.text : row.name,
-                        () => Strings.Percent(Mathf.RoundToInt(Mathf.InverseLerp(slider.minValue, slider.maxValue, slider.value) * 100f))));
+                    b.AddItem(ControlId.Structural(key), OptionRows.Slider(slider, () => label != null ? label.text : row.name));
                 }
                 else if (dropdown != null)
                 {
@@ -120,28 +118,9 @@ namespace Earplay.Module.Screens.Title
                 var font = row.GetComponent<DyslexicToggle>();
                 var button = row.GetComponent<Button>();
                 if (button == null) continue;
-                if (aid != null) b.AddItem(ControlId.Structural("options:" + row.name), Aid(button, aid));
+                if (aid != null) b.AddItem(ControlId.Structural("options:" + row.name), OptionRows.Aid(button, aid));
                 else if (font != null) b.AddItem(ControlId.Structural("options:" + row.name), Font(button, font));
             }
-        }
-
-        private static NodeVtable Aid(Button button, OptionTutorial aid)
-        {
-            System.Func<string> label = () => GameNodes.LabelOf(button);
-            System.Func<string> state = () => Private.Get<bool>(aid, "ticked") ? Strings.StateOff : Strings.StateOn;
-            return new NodeVtable
-            {
-                ControlType = ControlTypes.Toggle,
-                Announcements = new List<NodeAnnouncement>
-                {
-                    GameNodes.LabelPart(label),
-                    new NodeAnnouncement(state, live: true, kind: AnnouncementKinds.Value),
-                    GameNodes.DisabledPart(() => button.interactable),
-                },
-                SearchText = label,
-                OnActivate = () => { if (button.interactable) button.onClick.Invoke(); },
-                StateText = state,
-            };
         }
 
         private static NodeVtable Font(Button button, DyslexicToggle font)
@@ -178,19 +157,7 @@ namespace Earplay.Module.Screens.Title
         private static void AddMore(GraphBuilder b, Transform items)
         {
             for (int i = 0; i < items.childCount; i++)
-            {
-                var row = items.GetChild(i);
-                if (!row.gameObject.activeInHierarchy) continue;
-                var mover = row.GetComponent<MoveableButton>();
-                if (mover != null)
-                {
-                    TitlePages.AddButton(b, "options:delete", Private.Get<Button>(mover, "myButton"));
-                    if (Private.Get<bool>(mover, "sureShowing"))
-                        TitlePages.AddButton(b, "options:sure", Private.Get<Button>(mover, "sureButton"));
-                    continue;
-                }
-                TitlePages.AddButton(b, "options:" + row.name, row.GetComponent<Button>());
-            }
+                OptionRows.Add(b, items.GetChild(i), "options:" + items.GetChild(i).name);
         }
 
         public override IEnumerable<ElementAction> GetActions()
