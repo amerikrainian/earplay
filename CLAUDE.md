@@ -303,7 +303,8 @@ as the same press (`TitlePages.Back`).
   each line only illustrates it), then "Got it!", which runs `ShutTutorialScreen` (the first one then
   deals the tiles, `GridManagerScript.ReturnFromTutorial`). Escape presses it too.
 
-- **The round** (`Module/Round/`, `RoundScreen`, a `CompositeScreen` of three stops; active while
+- **The round** (`Module/Round/`, `RoundScreen`, a `CompositeScreen` of two stops, the board (with
+  the word strip as its last row) and the status; active while
   `Round.OnScreen`: the game's `GamepadControl.currentControlZone` is LetterGrid, or Menu / LetterBag /
   Tutorial, the panels that open over the grid and return to it, so focus survives them;
   `KeepStateOnPop` keeps it across the shop). It LENDS THE KEYBOARD (`FocusMode`, `IKeyboardLender`):
@@ -329,7 +330,11 @@ as the same press (`TitlePages.Back`).
     tool's own method (`BackspaceButtonClick`, `PressedRefreshButton` without the hold,
     `ShuffleButtonOnPress`, `PressedSubmitButton`, the bag as `BagScreen`). The first visit lands on
     the first letter tile.
-  - **Word** (`Round.WordSlots`): the shown submission slots (10, 20 once the tenth fills) as one row:
+  - **Word** (`Round.WordSlots`): the shown submission slots (10, 20 once the tenth fills) as the
+    BOARD STOP'S LAST ROW, sharing the board's row key, so slot n sits under column n and Up from slot 7
+    and beyond reaches column 6 (shared-key rows clamp to a shorter row's last item,
+    `GraphBuilder.VerticalTarget`); entering it says "Word"; Alt+W jumps to it keeping the column (board column n to slot n; from the
+    status, slot 1), as a move (`Navigation.MoveTo`). Each slot:
     "C, 3 points", "empty, +5" (the slot's bonus as drawn), "empty, required" for the first four
     (`numberOfTilesRequired`). No slot numbers: a typed or pressed tile goes to the FIRST empty slot
     (`PutTileInFirstEmptySpace`), so the word fills in order; only a mouse drag places a tile

@@ -551,10 +551,12 @@ namespace Earplay.Core.Graph
 
         // Where vertical navigation from position pos lands in the adjacent row: the same position when
         // the rows share a non-null key (column nav) and it exists there, else the first item.
+        // Rows sharing a key are columns: the same position, clamped to the row's last item when it is
+        // shorter (the word strip under the board: slot 7 and up reach the board's last column).
         private static ControlId VerticalTarget(Row from, Row to, int pos)
         {
-            if (from.Key != null && to.Key != null && Equals(from.Key, to.Key) && pos < to.Items.Count)
-                return to.Items[pos].Id;
+            if (from.Key != null && to.Key != null && Equals(from.Key, to.Key))
+                return to.Items[pos < to.Items.Count ? pos : to.Items.Count - 1].Id;
             return EntryOf(to).Id;
         }
     }

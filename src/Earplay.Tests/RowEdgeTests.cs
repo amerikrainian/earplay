@@ -72,6 +72,55 @@ namespace Earplay.Tests
             }
         }
 
+        // A longer row under shorter ones, sharing their key (the word strip under the board): Down keeps
+        // the column, Up from past the shorter row's end lands on its last item.
+        private sealed class StripScreen : Screen
+        {
+            public override string Key => "test.strip";
+            public override bool IsActive() => true;
+            public override void Build(GraphBuilder b)
+            {
+                b.BeginStop("board");
+                b.StartRow("board");
+                for (int c = 1; c <= 3; c++) b.AddItem(ControlId.Structural("cell" + c), Item("cell " + c));
+                b.EndRow();
+                b.StartRow("board");
+                for (int s = 1; s <= 5; s++) b.AddItem(ControlId.Structural("slot" + s), Item("slot " + s));
+                b.EndRow();
+            }
+
+            private static NodeVtable Item(string label) => new NodeVtable
+            {
+                Announcements = new[] { new NodeAnnouncement(() => label, kind: AnnouncementKinds.Label) },
+            };
+        }
+
+        [Fact]
+        public void UpFromPastAShorterRowLandsOnItsLastItem()
+        {
+            Speech.Speak = (t, i) => { };
+            NavInput.Current = new FakeNavInput { FrameCount = 1 };
+            var nav = new GraphNavigator();
+            Navigation.Active = nav;
+            try
+            {
+                nav.Attach(new StripScreen());
+                nav.EnsureFocus();
+                Assert.True(nav.OnInputJustPressed(Action(UiActions.Right)));
+                Assert.True(nav.OnInputJustPressed(Action(UiActions.Down)));
+                Assert.Equal("slot2", nav.FocusedNodeId.StructuralKey);
+                Assert.True(nav.OnInputJustPressed(Action(UiActions.End)));
+                Assert.Equal("slot5", nav.FocusedNodeId.StructuralKey);
+                Assert.True(nav.OnInputJustPressed(Action(UiActions.Up)));
+                Assert.Equal("cell3", nav.FocusedNodeId.StructuralKey);
+            }
+            finally
+            {
+                Navigation.Active = null;
+                Speech.Speak = null;
+            }
+        }
+
         [Fact]
         public void InAListHomeAndEndGoToItsEnds()
         {

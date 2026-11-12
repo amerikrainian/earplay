@@ -214,12 +214,11 @@ namespace Earplay.Tests
                 Assert.Equal(new[] { "slot 1, button, empty", "slot 2, button, Hammer" }, spoken.ToArray());
                 spoken.Clear();
 
-                // Down keeps the column where the next row reaches it, else lands on its hero.
+                // Down keeps the column, clamped to a shorter row's last item.
                 Assert.True(Navigation.DispatchJustPressed(Action(UiActions.Down)));
-                Assert.True(Navigation.DispatchJustPressed(Action(UiActions.Right)));
                 Assert.True(Navigation.DispatchJustPressed(Action(UiActions.Up)));
                 Assert.True(Navigation.DispatchJustPressed(Action(UiActions.Down)));
-                Assert.Equal(new[] { "Reyna, button", "slot 1, button, empty", "Kai, slot 1, button, empty", "Reyna, slot 1, button, empty" }, spoken.ToArray());
+                Assert.Equal(new[] { "Reyna, slot 1, button, empty", "Kai, slot 1, button, empty", "Reyna, slot 1, button, empty" }, spoken.ToArray());
                 spoken.Clear();
 
                 Assert.True(Navigation.DispatchJustPressed(Action(UiActions.Down)));

@@ -13,7 +13,9 @@ using Screen = Earplay.Core.Screens.Screen;
 namespace Earplay.Module.Round
 {
     /// <summary>
-    /// The round: three stops, the board, the word, the status. While it has focus it lends the
+    /// The round: two stops. The board, with the word strip as its last row, lined up under the board's
+    /// columns (slot n under column n; Up from slot 7 and beyond reaches column 6; Alt+W jumps to the
+    /// strip keeping the column), and the status. While it has focus it lends the
     /// keyboard to the game (<see cref="IKeyboardLender"/>), so a letter typed anywhere on it is the
     /// game's typing (the game picks the tile and sends it to the word), and the game's own digits,
     /// drawer keys, Shift, 8 and = work as in the game; the game's actions that clash with ours stay
@@ -36,6 +38,7 @@ namespace Earplay.Module.Round
         public const string RefreshAction = "round.refresh";
         public const string WildcardAction = "round.wildcard";
         public const string PlusAction = "round.plus";
+        public const string WordAction = "round.word";
 
         private const float RefreshHold = 1f;
 
@@ -78,6 +81,7 @@ namespace Earplay.Module.Round
                 if (Round.CanInteract && TopDrawerManager.Instance != null) TopDrawerManager.Instance.ToggleOptionsDrawer();
             });
             yield return new ElementAction(ClearAction, Strings.Get("bind.round.clear"), _ => ClearWord());
+            yield return new ElementAction(WordAction, Strings.Get("bind.round.word"), _ => JumpToWord());
             bool shuffleFirst = ToolsScript.Instance == null || ToolsScript.Instance.shuffle.defaultIsShuffle;
             yield return new ElementAction(ShuffleAction, shuffleFirst ? Strings.ToolShuffle : Strings.ToolSort, _ =>
             {
@@ -96,6 +100,22 @@ namespace Earplay.Module.Round
                 SubmissionScript.Instance.CloseAllGaps();
                 Later.Frames(20, () => Speech.Say(Strings.GapsClosed(Round.WordSoFar()), interrupt: true), "close gaps");
             });
+        }
+
+        // Alt+W: the word strip, keeping the column: from board column n, slot n; from the status, or
+        // a column the strip does not reach, slot 1. Landed on as a move (interrupting).
+        private static void JumpToWord()
+        {
+            int slot = 0;
+            var key = Navigation.FocusedNode?.Id?.StructuralKey as string;
+            if (key != null && key.StartsWith("board:", System.StringComparison.Ordinal))
+            {
+                var parts = key.Split(':');
+                if (parts.Length == 3 && int.TryParse(parts[1], out int column)) slot = column - 1;
+            }
+            if (slot >= Round.WordSlots().Count) slot = 0;
+            if (key != null && key.StartsWith("word:", System.StringComparison.Ordinal)) return; // already there
+            Navigation.MoveTo(ControlId.Structural("word:" + slot));
         }
 
         // A real key press holds a second before refreshing, as the game's own key does; a press with
@@ -249,8 +269,9 @@ namespace Earplay.Module.Round
         }
     }
 
-    /// <summary>The word: the shown submission slots in a row. Enter submits from any slot, Delete
-    /// sends the slot's tile back to the board, Backspace takes the last tile out.</summary>
+    /// <summary>The word: the shown submission slots, the board stop's last row, sharing the board's
+    /// row key so slot n sits under column n. Enter submits from any slot, Delete sends the slot's tile
+    /// back to the board, Backspace takes the last tile out.</summary>
     internal sealed class WordSection : ScreenSection
     {
         private readonly bool _readOnly;
@@ -260,9 +281,8 @@ namespace Earplay.Module.Round
         {
             var slots = Round.WordSlots();
             if (slots.Count == 0) return;
-            b.BeginStop("word");
             b.PushContext(Strings.RoundWord);
-            b.StartRow();
+            b.StartRow("board");
             foreach (var slot in slots)
             {
                 var s = slot;
