@@ -210,6 +210,11 @@ namespace Earplay.Module.Round
             }
         }
 
+        // The special round's rule as last spoken, with the round it was spoken in.
+        private static string _specialSpoken;
+
+        // The game redraws the rule in the strip after every word of the round (UpdateLastWord): it is
+        // spoken once a round, when it first shows or when it changes.
         [HarmonyPatch(typeof(LastWordArea), nameof(LastWordArea.ShowSpecialRoundText))]
         private static class SpecialRound
         {
@@ -218,7 +223,12 @@ namespace Earplay.Module.Round
                 Later.Frames(2, () =>
                 {
                     string line = Round.MessageLine();
-                    if (line != null) Speech.Say(line);
+                    if (line == null) return;
+                    int round = LogicManagerScript.Instance != null ? LogicManagerScript.Instance.currentRound : 0;
+                    string key = round + "|" + line;
+                    if (key == _specialSpoken) return;
+                    _specialSpoken = key;
+                    Speech.Say(line);
                 }, "special round");
             }
         }

@@ -370,7 +370,8 @@ as the same press (`TitlePages.Back`).
     typed letter found no tile), `SubmitWord.SubmitTheWord` (board noted), `WordWasNotAccepted`
     ("SMOE: not a word"), `ReturnToGame` / `LogicManagerScript.FinishRound` ("BREAD: 13", the score
     line, "round complete", "new: E, 3 1, T, 4 2, ..." from the board diff, 15 frames on),
-    `LastWordArea.TutorialMessage` and `ShowSpecialRoundText` (the strip), `ShuffleTool.ShuffleTiles` /
+    `LastWordArea.TutorialMessage` and `ShowSpecialRoundText` (the strip; the rule once a round, by
+    round and text: the game redraws it after every word), `ShuffleTool.ShuffleTiles` /
     `SortTilesAlphabetically` ("shuffled" when tiles moved), `RefreshTool.RefreshAllTiles`
     ("refreshed, 4 left"). Verified live: BREAD typed, submitted, scored 13, five new tiles named.
   - The driver cannot type into the game: call the private `KeyboardControl.OnTextInput((char)'b')`
