@@ -93,6 +93,7 @@ namespace Earplay.Module.Round
         {
             base.OnPop();
             TileSwap.Reset();
+            ModifierMove.Reset();
         }
 
         protected override IEnumerable<ElementAction> OwnActions()
@@ -101,9 +102,10 @@ namespace Earplay.Module.Round
             // Options drawer.
             bool picking = ControlManagerScript.Instance != null && ControlManagerScript.Instance.inUpgradeTileSelectMode;
             yield return new ElementAction(ActionIds.Back,
-                TileSwap.Holding ? Strings.Get("bind.round.putdown") : picking ? Strings.Get("bind.round.cancelpick") : Strings.TitleOptions, _ =>
+                TileSwap.Holding || ModifierMove.Holding ? Strings.Get("bind.round.putdown") : picking ? Strings.Get("bind.round.cancelpick") : Strings.TitleOptions, _ =>
             {
                 if (TileSwap.Holding) { TileSwap.Cancel(); return; }
+                if (ModifierMove.Holding) { ModifierMove.Cancel(); return; }
                 if (ControlManagerScript.Instance != null && ControlManagerScript.Instance.inUpgradeTileSelectMode)
                 {
                     ControlManagerScript.Instance.CancelClickToUpgradeMode(hideText: true);

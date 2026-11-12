@@ -393,7 +393,11 @@ as the same press (`TitlePages.Back`).
     card's `shopDescription` then its `additionalDescription` text. Enter is `ToggleCard` (slides out
     Sell, and focus lands on it once the slide's tween sets `sellIconIsShowing`, polled while
     `stubIsMoving`); while `sellIconIsShowing` a "Sell, +1" node (`sellAmount`'s two lines) follows the card,
-    Enter on it `SellStub`, then the refreshes line. Reordering is not offered yet.
+    Enter on it `SellStub`, then the refreshes line. Space reorders (`Round/ModifierMove`): Space picks
+    one up (its readout says "held"), Space on another moves it into that place, the end of the
+    game's drag (`SetSiblingIndex` to the target's under `modifierParent`, then `RefreshStubList`,
+    which rebuilds `ownedModifiers` in that order); focus follows it and the landing re-reads it. Space on the held one, or Escape, puts it down. Node ids are the stub's name
+    (`RefreshStubList` renumbers `allModifierStubs`).
   - Upgrades: `allUpgradeStubs` with `hasAPurchasedUpgrade`: stub text, "3 of 4 uses left"
     (`UpgradeGetNumberLeft` of `UpgradeMaximum` + `extraUpgradePoints`), "picking a tile" while it
     waits. Enter: `PlayerClickedUpgrade` (the game's "Pick a tile to upgrade", then Enter on a tile

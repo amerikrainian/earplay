@@ -37,13 +37,15 @@ namespace Earplay.Module.Round
             foreach (var stub in owned)
             {
                 var s = stub;
-                string id = "modifier:" + inv.allModifierStubs.IndexOf(s);
+                // Keyed by the stub's own name: a move renumbers allModifierStubs.
+                string id = ModifierMove.Id(s);
                 b.AddItem(ControlId.Structural(id), new NodeVtable
                 {
                     ControlType = ControlTypes.Button,
                     Announcements = new List<NodeAnnouncement> { GameNodes.LabelPart(() => Line(s)) },
                     SearchText = () => Text(Private.Get<TMP_Text>(s, "myDescription")),
                     Details = () => Drawers.Description(s.associatedModifier),
+                    OnDrag = () => ModifierMove.Press(s),
                     OnActivate = () =>
                     {
                         bool wasShowing = s.sellIconIsShowing;
@@ -93,6 +95,7 @@ namespace Earplay.Module.Round
             }
             var disabled = Private.Get<GameObject>(s, "disabledOverlay");
             if (disabled != null && disabled.activeInHierarchy) parts.Add(Strings.StateDisabled);
+            if (ReferenceEquals(ModifierMove.Held, s)) parts.Add(Strings.TileHeld);
             return string.Join(", ", parts);
         }
 
@@ -187,6 +190,67 @@ namespace Earplay.Module.Round
         {
             var glass = s.glassTileHasBeenCreated ? s.glassTile : null;
             return glass != null && !glass.fullySpent ? glass : null;
+        }
+    }
+
+    /// <summary>
+    /// Reordering the modifiers by keyboard (Space), their order being the scoring order: the first
+    /// press on a modifier picks it up (noted only), a press on another moves it into that one's place,
+    /// the end of the game's own drag (the stub's sibling index set to the target's under
+    /// <c>BonusInventory.modifierParent</c>, then <c>RefreshStubList</c>, which rebuilds
+    /// <c>ownedModifiers</c> in that order). Space on the held one, or Escape, puts it down. Focus
+    /// follows the moved modifier, and the landing re-reads it.
+    /// </summary>
+    internal static class ModifierMove
+    {
+        private static ModifierStubScript _held;
+
+        public static ModifierStubScript Held => _held != null ? _held : null;
+        public static bool Holding => Held != null;
+
+        public static string Id(ModifierStubScript stub) => "modifier:" + stub.gameObject.name;
+
+        public static void Press(ModifierStubScript target)
+        {
+            if (target == null || !Round.CanInteract || TileSwap.Holding) return;
+            var held = Held;
+            if (held == null)
+            {
+                if (!target.hasAPurchasedModifer || target.stubIsMoving) return;
+                _held = target;
+                Speech.Say(Strings.PickedUp(ModifiersSection.Text(Private.Get<TMP_Text>(target, "myDescription"))), interrupt: true);
+                return;
+            }
+            if (ReferenceEquals(held, target)) { Cancel(); return; }
+            Move(held, target);
+        }
+
+        public static void Cancel()
+        {
+            var held = Held;
+            _held = null;
+            if (held != null) Speech.Say(Strings.PutDown(ModifiersSection.Text(Private.Get<TMP_Text>(held, "myDescription"))), interrupt: true);
+        }
+
+        public static void Reset() => _held = null;
+
+        private static void Move(ModifierStubScript held, ModifierStubScript target)
+        {
+            _held = null;
+            var inv = BonusInventory.Instance;
+            if (inv == null || inv.modifierParent == null) return;
+            try
+            {
+                held.transform.SetSiblingIndex(target.transform.GetSiblingIndex());
+                inv.RefreshStubList();
+            }
+            catch (System.Exception e)
+            {
+                CoreLog.Warning("ModifierMove: move failed: " + e);
+                return;
+            }
+            // Focus follows it, and the landing re-reads it in its new place.
+            if (!Navigation.MoveTo(ControlId.Structural(Id(held)))) Navigation.AnnounceCurrent();
         }
     }
 
