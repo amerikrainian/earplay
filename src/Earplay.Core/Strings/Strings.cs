@@ -115,16 +115,20 @@ namespace Earplay.Core.Strings
             // Screen names, spoken on entering a screen.
             D("screen.main_menu", "Main menu"),
             D("screen.help", "Keys here"),
-            // The level select, which draws no title of its own.
+            // The title scene's pages that draw no title of their own.
             D("screen.level_select", "Level select"),
+            D("screen.consent", "Data collection"),
+            D("screen.extras", "Extras"),
+            // The title's caption-less icon buttons, and the options page's resolution dropdown, which
+            // draws only its current value.
+            D("title.options", "Options"),
+            D("title.full_screen", "Full screen"),
+            D("title.resolution", "Resolution"),
             // A mode tile on the level select: locked until Easy Mode is beaten; beaten (gold).
             D("level.locked", "locked"),
             D("level.completed", "completed"),
-            // The main menu's caption-less icon buttons.
-            D("title.options", "Options"),
-            D("title.full_screen", "Full screen"),
-            // The options page's resolution dropdown, which draws only its current value.
-            D("title.resolution", "Resolution"),
+            // A row of the Extras stats: {0} = the stat's label, {1} = its value.
+            D("extras.stat", "{0}: {1}"),
 
             // The mod's own menu (Ctrl+Shift+M).
             D("screen.mod_menu", "Earplay"),
@@ -312,11 +316,14 @@ namespace Earplay.Core.Strings
 
         public static string ScreenMainMenu => Get("screen.main_menu");
         public static string ScreenLevelSelect => Get("screen.level_select");
-        public static string LevelLocked => Get("level.locked");
-        public static string LevelCompleted => Get("level.completed");
+        public static string ScreenConsent => Get("screen.consent");
+        public static string ScreenExtras => Get("screen.extras");
         public static string TitleOptions => Get("title.options");
         public static string TitleFullScreen => Get("title.full_screen");
         public static string TitleResolution => Get("title.resolution");
+        public static string LevelLocked => Get("level.locked");
+        public static string LevelCompleted => Get("level.completed");
+        public static string StatLine(string label, string value) => F("extras.stat", label, value);
         public static string Percent(int value) => F("value.percent", value);
         public static string ScreenHelp => Get("screen.help");
         public static string ScreenModMenu => Get("screen.mod_menu");

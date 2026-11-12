@@ -144,6 +144,8 @@ namespace Earplay.Module
             ScreenManager.Register(new Screens.Title.MainMenuScreen());
             ScreenManager.Register(new Screens.Title.LevelSelectScreen());
             ScreenManager.Register(new Screens.Title.OptionsScreen());
+            ScreenManager.Register(new Screens.Title.ExtrasScreen());
+            ScreenManager.Register(new Screens.Title.ConsentScreen());
             ScreenManager.Register(new ModMenuScreen());
             ScreenManager.Register(new HelpScreen());
         }
