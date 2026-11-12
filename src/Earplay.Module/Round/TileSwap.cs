@@ -64,6 +64,35 @@ namespace Earplay.Module.Round
             if (held != null) Speech.Say(Strings.PutDown(Round.TileName(held)), interrupt: true);
         }
 
+        /// <summary>Space on an upgrade: the held tile dropped onto it, the game's drop onto the
+        /// upgrade's slot (<c>dragSlotScript</c>, an upgrade drop target), so the upgrade is used on it
+        /// (<see cref="UpgradeConfirm"/> reads the result). With nothing held, nothing happens. A drop
+        /// the game refuses (a button upgrade, glass, a used-up stub) sends the tile back: "can't move
+        /// N there".</summary>
+        public static void DropOnUpgrade(UpgradeStubScript stub)
+        {
+            var held = Held;
+            if (held == null || stub == null || stub.dragSlotScript == null || !Round.CanInteract) return;
+            _held = null;
+            string name = Round.TileName(held);
+            RoundEvents.QuietFor(40);
+            try
+            {
+                held.dragScript.OnBeginControlDrag();
+                held.dragScript.DropTile(stub.dragSlotScript.gameObject);
+            }
+            catch (System.Exception e)
+            {
+                CoreLog.Warning("TileSwap: drop on upgrade failed: " + e);
+                return;
+            }
+            Later.Frames(25, () =>
+            {
+                if (held != null && !ReferenceEquals(UpgradeConfirm.Pending, held) && !held.tileIsMoving)
+                    Speech.Say(Strings.CantMoveThere(name), interrupt: true);
+            }, "upgrade drop");
+        }
+
         /// <summary>Drop the hold silently (the round left the screen, a word was submitted).</summary>
         public static void Reset() => _held = null;
 

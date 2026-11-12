@@ -390,7 +390,12 @@ as the same press (`TitlePages.Back`).
     is the game's own press in that mode, `ControllerInteractTile` -> `SendToUpgradeCard`); a
     `HasButton` upgrade calls `TriggerBonusButtonScript` directly (the game's press reaches it only
     in keyboard/controller control type, which focus mode never sets). Escape on the round cancels
-    the pick (`CancelClickToUpgradeMode`). The Swap Tile picker (`PickTileManager`, zone
+    the pick (`CancelClickToUpgradeMode`). Space with a tile picked up (`TileSwap`) on an upgrade
+    drops it there: `DropTile(stub.dragSlotScript.gameObject)`, an upgrade drop target, the game's
+    drag-and-drop route ("can't move N there" when no `UpgradeTile` follows). Every route ends in
+    `UpgradeStubScript.UpgradeTile`, which `Round/UpgradeConfirm` hooks: it notes the tile and its
+    board spot (`myHolder`), waits for interaction to resume (the coroutine resumes it after putting
+    the tile back), and re-reads the tile as landing on it reads it ("A, 1 point, diamond, 3 1"). The Swap Tile picker (`PickTileManager`, zone
     TilePicker) is not covered yet.
 - **Shop** (`Screens/Game/ShopScreen`, while `ShopManager.shopIsShowing` and the zone is Shop): its
   title ("Round 1 Complete", `shopTitleText`) names the screen; ONE stop: the plays the round

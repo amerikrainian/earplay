@@ -116,7 +116,9 @@ namespace Earplay.Module.Round
     /// stub: a tile upgrade starts the game's "Pick a tile to upgrade" (<c>PlayerClickedUpgrade</c>; then
     /// Enter on a board or word tile applies it, through the same press on the tile, and Escape
     /// cancels); a button upgrade fires (<c>TriggerBonusButtonScript</c>, which the game's own press
-    /// reaches only in keyboard or controller mode).
+    /// reaches only in keyboard or controller mode). Space with a tile picked up drops it on the upgrade
+    /// (<see cref="TileSwap.DropOnUpgrade"/>), the game's drag-and-drop route. Either way the tile is
+    /// re-read once the upgrade is done (<see cref="UpgradeConfirm"/>).
     /// </summary>
     internal sealed class UpgradesSection : ScreenSection
     {
@@ -142,6 +144,8 @@ namespace Earplay.Module.Round
                     Details = () => Drawers.Description(s.associatedBonus),
                     OnActivate = () => Use(s),
                     OnSecondary = RoundScreen.RemoveLast,
+                    // Space with a tile picked up drops it here (the game's drag onto the upgrade).
+                    OnDrag = () => TileSwap.DropOnUpgrade(s),
                 });
             }
             b.PopContext();
