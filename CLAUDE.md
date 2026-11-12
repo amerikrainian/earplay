@@ -356,7 +356,8 @@ as the same press (`TitlePages.Back`).
     move N there" (the tile's parent unchanged: the game sent it back). Verified live: a board swap and back, a drop into an empty slot, a cancel.
   - **Keys**: Backspace (every round node's secondary) the last tile out (`BackspaceButtonClick`, the
     game's LIFO list), Shift+Backspace the whole word (`BackspaceButtonHold`), Ctrl+Backspace close
-    gaps (`CloseAllGaps`), Escape the Options drawer (`TopDrawerManager.ToggleOptionsDrawer`). The
+    gaps (`CloseAllGaps`), Shift+Enter submits from anywhere on the round (`PressedSubmitButton`, as
+    Enter on the word or the Submit tool does), Escape the Options drawer (`TopDrawerManager.ToggleOptionsDrawer`). The
     game's tool keys are ours on the round (its Shuffle Tiles, Refresh Tiles, Type Wildcard and Insert
     Plus actions blocked), so F1 lists and runs them: 2 the shuffle tool's press (labelled Shuffle or
     Sort by `defaultIsShuffle`), Shift+2 the other (the game's hold on 2), 3 Refresh held a second

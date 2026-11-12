@@ -39,6 +39,7 @@ namespace Earplay.Module.Round
         public const string WildcardAction = "round.wildcard";
         public const string PlusAction = "round.plus";
         public const string WordAction = "round.word";
+        public const string SubmitAction = "round.submit";
 
         private const float RefreshHold = 1f;
 
@@ -82,6 +83,7 @@ namespace Earplay.Module.Round
             });
             yield return new ElementAction(ClearAction, Strings.Get("bind.round.clear"), _ => ClearWord());
             yield return new ElementAction(WordAction, Strings.Get("bind.round.word"), _ => JumpToWord());
+            yield return new ElementAction(SubmitAction, Strings.Get("bind.round.submit"), _ => Submit());
             bool shuffleFirst = ToolsScript.Instance == null || ToolsScript.Instance.shuffle.defaultIsShuffle;
             yield return new ElementAction(ShuffleAction, shuffleFirst ? Strings.ToolShuffle : Strings.ToolSort, _ =>
             {
