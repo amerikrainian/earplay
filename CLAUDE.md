@@ -264,12 +264,15 @@ as the same press (`TitlePages.Back`).
   tiles are decoration. Play opens the level select directly in this build (`OpenLevelSelect`; the
   consent page's `OpenConsentScreen` is wired to nothing).
 - **Level select** (`LevelSelectScreen`, `levelSelectGO` + `LevelSelectScript`): the "Picker"
-  groups, each a context named by its label ("STRATEGIC", "CASUAL"), each tile a radio button named by
-  `levelNames[i]`, `i` its index in `pickerTiles` (index 0 is an unused duplicate of Easy), the index
-  its click hands to `ChangeDetails`. Landing on a tile clicks it (`OnFocus`), so the details panel
-  follows focus and the tile reads the description and the record after its name ("Not Yet Played",
-  "Complete Easy Mode to Unlock", "Finished in 12 Words"); "locked" from `lockIcons[i]`, "completed"
-  from `goldenOverlays[i]`. Then Play (`playButton`, disabled on a locked mode) and Back.
+  groups, each a context named by its label ("STRATEGIC", "CASUAL") and a ROW as drawn (Left/Right
+  within it, Up/Down between groups and on to Play; a row is entered on the tile last landed on there),
+  each tile a radio button named by `levelNames[i]`, `i` its index in `pickerTiles` (index 0 is an
+  unused duplicate of Easy), the index its click hands to `ChangeDetails`. Landing on a tile clicks it
+  (`OnFocus`), a locked one too (the game selects it and greys Play out), so the details panel follows
+  focus and the tile reads the description and the record after its name ("Not Yet Played", "Complete
+  Easy Mode to Unlock", "Finished in 12 Words"). The tile landed on is always the selected one, so a
+  tile says no "selected" (as a tab does not); "locked" from `lockIcons[i]`, "completed" from
+  `goldenOverlays[i]`. Then Play (`playButton`, disabled on a locked mode) and Back.
 - **Options** (`OptionsScreen`): three stops named by their panel titles, read in visual order (the
   hierarchy lists them right to left), then Back. Options: Toggle Full Screen (with the state), the
   SFX and Music sliders (0 to 1, read as percent, a tenth a step; `AudioSliderController` applies

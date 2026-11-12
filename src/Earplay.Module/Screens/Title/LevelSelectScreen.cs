@@ -18,10 +18,13 @@ namespace Earplay.Module.Screens.Title
     /// the five are beaten; "CASUAL": Quick Play), then the page's Play and Back buttons. A tile is a
     /// letter on the screen; it reads by its mode's name from <c>LevelSelectScript.levelNames</c>, the
     /// list its index in <c>pickerTiles</c> addresses (the same index the tile's click hands to
-    /// <c>ChangeDetails</c>). Landing on a tile selects it, as a click does, so the details panel
-    /// follows focus and the tile reads its description and record ("Not Yet Played", "Complete Easy
-    /// Mode to Unlock") after its name; a locked tile says so, and a beaten one (its gold overlay)
-    /// says completed. Play starts the selected mode. Escape presses Back.
+    /// <c>ChangeDetails</c>). Each group is a row, as drawn: Left/Right within it, Up/Down between
+    /// the groups and on to Play and Back. Landing on a tile selects it, as a click does (a locked one
+    /// too: the game then greys Play out), so the details panel follows focus and the tile reads its
+    /// description and record ("Not Yet Played", "Complete Easy Mode to Unlock") after its name. Since
+    /// the tile landed on is always the selected one, a tile says no "selected", as a tab does not; a
+    /// locked tile says locked, and a beaten one (its gold overlay) says completed. Play starts the
+    /// selected mode. Escape presses Back.
     /// </summary>
     public sealed class LevelSelectScreen : Screen
     {
@@ -29,6 +32,11 @@ namespace Earplay.Module.Screens.Title
         public override string ScreenName => Strings.ScreenLevelSelect;
 
         public override bool IsActive() => TitlePages.Showing(TitleControl.TitleControlZone.LevelSelect);
+
+        // The tile last landed on in each group (by the group's object name): Up/Down into a row
+        // return to it. The selected tile cannot say this, since landing on another row's tile
+        // selects that one. Navigation memory, not game state.
+        private readonly Dictionary<string, int> _lastInRow = new Dictionary<string, int>();
 
         private static LevelSelectScript Script()
         {
@@ -58,14 +66,32 @@ namespace Earplay.Module.Screens.Title
                 {
                     var group = picker.GetChild(g);
                     if (!group.gameObject.activeInHierarchy) continue;
-                    var caption = FirstGroupLabel(group);
-                    b.PushContext(caption != null ? caption.text : group.name);
+                    var row = new List<(Button tile, int id)>();
                     foreach (var tile in group.GetComponentsInChildren<Button>(false))
                     {
                         int id = IndexOf(tiles, tile.gameObject);
-                        if (id <= 0) continue;
-                        b.AddItem(ControlId.Structural("levels:" + id), Tile(script, tile, id, gold, locks, description, record));
+                        if (id > 0) row.Add((tile, id));
                     }
+                    if (row.Count == 0) continue;
+                    var caption = FirstGroupLabel(group);
+                    b.PushContext(caption != null ? caption.text : group.name);
+                    // A group is a row, as drawn: Left/Right walk its tiles, Up/Down cross to the
+                    // next group (or Play), entering a row on the tile last landed on there, else
+                    // its selected one, else its first.
+                    string rowName = group.name;
+                    b.StartRow(entry: () =>
+                    {
+                        int target = _lastInRow.TryGetValue(rowName, out int last) ? last : Private.Get<int>(script, "currentID");
+                        return row.FindIndex(t => t.id == target);
+                    });
+                    foreach (var (tile, id) in row)
+                    {
+                        var vt = Tile(script, tile, id, gold, locks, description, record);
+                        var select = vt.OnFocus;
+                        vt.OnFocus = () => { _lastInRow[rowName] = id; select(); };
+                        b.AddItem(ControlId.Structural("levels:" + id), vt);
+                    }
+                    b.EndRow();
                     b.PopContext();
                 }
             }
@@ -86,7 +112,6 @@ namespace Earplay.Module.Screens.Title
                 Announcements = new List<NodeAnnouncement>
                 {
                     GameNodes.LabelPart(name),
-                    GameNodes.SelectedPart(selected),
                     new NodeAnnouncement(() => Shown(locks, id) ? Strings.LevelLocked : null, kind: AnnouncementKinds.Value),
                     new NodeAnnouncement(() => Shown(gold, id) ? Strings.LevelCompleted : null, kind: AnnouncementKinds.Value),
                     // The details panel describes the selected mode, which landing has just made this one.
