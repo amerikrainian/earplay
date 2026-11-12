@@ -346,9 +346,9 @@ as the same press (`TitlePages.Back`).
     mouse drag's rules hold: board tiles swap, a slot takes it (an occupied one swaps), a word tile
     dropped on the board goes back to its spot, locked and stuck tiles refuse. Every drop path ends in
     `FinishDrop`, which clears `holdingATile` (typing is refused while it is set). Space on the held
-    tile, or Escape, puts it down. Result 25 frames on, the word row's own lines quiet meanwhile:
-    "N swapped with E", "N moved", "can't move N there" (the tile's parent unchanged: the game sent
-    it back). Verified live: a board swap and back, a drop into an empty slot, a cancel.
+    tile, or Escape, puts it down. Result 25 frames on, the word row's own lines quiet meanwhile: the
+    target re-read as landing on it reads it ("N, 1 point, 3 1"; "N, 1 point" in the word), or "can't
+    move N there" (the tile's parent unchanged: the game sent it back). Verified live: a board swap and back, a drop into an empty slot, a cancel.
   - **Keys**: Backspace (every round node's secondary) the last tile out (`BackspaceButtonClick`, the
     game's LIFO list), Shift+Backspace the whole word (`BackspaceButtonHold`), Ctrl+Backspace close
     gaps (`CloseAllGaps`), Escape the Options drawer (`TopDrawerManager.ToggleOptionsDrawer`).

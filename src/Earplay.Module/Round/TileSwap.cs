@@ -12,9 +12,9 @@ namespace Earplay.Module.Round
     /// mouse drag holds: two board tiles swap places, a word slot takes the tile (an occupied one
     /// swaps, sending the occupant back), a word tile dropped on the board goes back to its own spot, a
     /// locked or stuck tile refuses. A press on the held tile itself, or Escape, puts it back down.
-    /// The word row's own announcements stand down for the move; its result is one line, read once
-    /// the tiles have settled: "C swapped with A", "C moved", or "can't move C there" (the game sent
-    /// it back).
+    /// The word row's own announcements stand down for the move; its result is the target re-read as
+    /// landing on it reads it ("N, 1 point, 3 1" on the board, "N, 1 point" in the word), once the
+    /// tiles have settled, or "can't move N there" when the game sent the tile back.
     /// </summary>
     internal static class TileSwap
     {
@@ -71,12 +71,20 @@ namespace Earplay.Module.Round
         /// <summary>Drop the hold silently (the round left the screen, a word was submitted).</summary>
         public static void Reset() => _held = null;
 
+        // The target as its node reads it: a word slot's line, or the board cell's.
+        private static string Readout(TileHolderScript target)
+        {
+            if (target.submissionSlot) return Round.SlotLine(target);
+            foreach (var row in Round.Board())
+                foreach (var cell in row)
+                    if (cell.Holder == target) return Round.CellLine(cell);
+            return null;
+        }
+
         private static void Drop(TileScript held, TileHolderScript target, TileScript targetTile)
         {
             _held = null;
             string name = Round.TileName(held);
-            // The tile already there and still in place, the one a move swaps with.
-            string other = targetTile != null && !targetTile.fullySpent ? Round.TileName(targetTile) : null;
             var parentBefore = held.transform.parent;
             RoundEvents.QuietFor(40);
             try
@@ -94,10 +102,11 @@ namespace Earplay.Module.Round
                 if (held == null) return;
                 if (held.transform.parent == parentBefore)
                     Speech.Say(Strings.CantMoveThere(name), interrupt: true);
-                else if (other != null)
-                    Speech.Say(Strings.Swapped(name, other), interrupt: true);
                 else
-                    Speech.Say(Strings.Moved(name), interrupt: true);
+                {
+                    string line = Readout(target);
+                    if (line != null) Speech.Say(line, interrupt: true);
+                }
             }, "tile swap");
         }
     }
