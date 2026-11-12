@@ -57,6 +57,8 @@ namespace Earplay.Core.Strings
             D("state.collapsed", "collapsed"),
             D("value.blank", "blank"),
             D("value.space", "space"),
+            // A volume slider's value; {0} = a whole number from 0 to 100.
+            D("value.percent", "{0}%"),
             D("edit.begin", "editing"),
             D("edit.selected", "{0} selected"),
             D("edit.unselected", "{0} unselected"),
@@ -121,6 +123,8 @@ namespace Earplay.Core.Strings
             // The main menu's caption-less icon buttons.
             D("title.options", "Options"),
             D("title.full_screen", "Full screen"),
+            // The options page's resolution dropdown, which draws only its current value.
+            D("title.resolution", "Resolution"),
 
             // The mod's own menu (Ctrl+Shift+M).
             D("screen.mod_menu", "Earplay"),
@@ -312,6 +316,8 @@ namespace Earplay.Core.Strings
         public static string LevelCompleted => Get("level.completed");
         public static string TitleOptions => Get("title.options");
         public static string TitleFullScreen => Get("title.full_screen");
+        public static string TitleResolution => Get("title.resolution");
+        public static string Percent(int value) => F("value.percent", value);
         public static string ScreenHelp => Get("screen.help");
         public static string ScreenModMenu => Get("screen.mod_menu");
         public static string ModSettings => Get("mod.settings");
