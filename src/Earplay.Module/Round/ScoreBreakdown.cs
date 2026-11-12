@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Earplay.Core;
 using Earplay.Core.Strings;
 using Earplay.Module.Interop;
@@ -24,10 +25,72 @@ namespace Earplay.Module.Round
     /// round is on.</item>
     /// </list>
     /// A modifier's flash outside a word (a free refresh, the start of a round) is read the same way.
+    /// <para>The flashes of the moment a word is accepted (each modifier's <c>OnCorrectWordSubmitted</c>
+    /// and <c>LivesToLose</c>, before the tiles score: from <c>SubmitTheWord</c> to
+    /// <c>BarScript.FadeInScore</c>) are held back: many only notice the word ("5 Tiles, First and
+    /// Last 3x" counts it and acts later, on its tiles). A held flash is dropped when the same modifier
+    /// flashes again while the word scores (its effect is announced where it happens), and spoken
+    /// just before the total otherwise (some act at that moment alone: points added to every tile, a
+    /// counter advanced).</para>
     /// </summary>
     internal static class ScoreBreakdown
     {
         private static int _golden;
+
+        // Where a word's scoring is: before the tiles score (flashes held), while they and the word
+        // score, or no word at all.
+        private enum Phase { Idle, Accepted, Scoring }
+        private static Phase _phase;
+        private static readonly List<ModifierStubScript> _held = new List<ModifierStubScript>();
+
+        private static string StubText(ModifierStubScript stub)
+            => ModifiersSection.Text(Private.Get<TMP_Text>(stub, "myDescription"));
+
+        // The held flashes no later one repeated, said before the total.
+        private static void SayHeld()
+        {
+            foreach (var stub in _held)
+                if (stub != null) Say(StubText(stub));
+            _held.Clear();
+        }
+
+        [HarmonyPatch(typeof(SubmitWord), nameof(SubmitWord.SubmitTheWord))]
+        private static class WordStarted
+        {
+            private static void Prefix()
+            {
+                _phase = Phase.Accepted;
+                _held.Clear();
+            }
+        }
+
+        [HarmonyPatch(typeof(SubmitWord), "WordWasNotAccepted")]
+        private static class WordRefused
+        {
+            private static void Prefix()
+            {
+                _phase = Phase.Idle;
+                _held.Clear();
+            }
+        }
+
+        [HarmonyPatch(typeof(BarScript), nameof(BarScript.FadeInScore))]
+        private static class TilesScoring
+        {
+            private static void Postfix() { if (_phase == Phase.Accepted) _phase = Phase.Scoring; }
+        }
+
+        [HarmonyPatch(typeof(SubmitWord), "ReturnToGame")]
+        private static class WordDoneReturned
+        {
+            private static void Postfix() { SayHeld(); _phase = Phase.Idle; }
+        }
+
+        [HarmonyPatch(typeof(LogicManagerScript), nameof(LogicManagerScript.FinishRound))]
+        private static class WordDoneRoundWon
+        {
+            private static void Prefix() { SayHeld(); _phase = Phase.Idle; }
+        }
 
         private static bool On => ModuleSettings.ScoreBreakdown;
 
@@ -80,7 +143,13 @@ namespace Earplay.Module.Round
             private static void Postfix(ModifierStubScript __instance)
             {
                 if (__instance == null || !__instance.hasAPurchasedModifer) return;
-                Say(ModifiersSection.Text(Private.Get<TMP_Text>(__instance, "myDescription")));
+                if (_phase == Phase.Accepted)
+                {
+                    if (!_held.Contains(__instance)) _held.Add(__instance);
+                    return;
+                }
+                _held.Remove(__instance);
+                Say(StubText(__instance));
             }
         }
 
@@ -92,6 +161,7 @@ namespace Earplay.Module.Round
                 var submit = SubmitWord.Instance;
                 int letters = submit != null ? Private.Get<int>(submit, "wordScoreForLog") : newNumber;
                 int bonus = submit != null ? Private.Get<int>(submit, "bonusScoreForLog") : 0;
+                SayHeld();
                 Say(Strings.BreakdownTotal(letters, bonus, newNumber));
             }
         }

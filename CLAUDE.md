@@ -437,6 +437,9 @@ as the same press (`TitlePages.Back`).
   text; also outside a word), the total (`BarScript.ChangeFinalScore`, parts from `SubmitWord`'s
   `wordScoreForLog` / `bonusScoreForLog`: "12 plus 10: 22"), a modifier's change to it
   (`ChangeFinalFinalScore`), the plays popup (`LifeBarScript.PopupText`, while `Round.Playing`).
+  Flashes of the moment the word is accepted (`OnCorrectWordSubmitted`, `LivesToLose`: from
+  `SubmitTheWord` to `BarScript.FadeInScore`) are held: dropped when the same modifier flashes again
+  while the word scores, said before the total otherwise (a modifier that acts only then).
   With it on, the word's closing line names the word alone ("PADDING"), the total already given;
   off, "PADDING: 97". Verified live on PADDING (golden tiles, two modifiers).
   The game has no score preview before submitting.
