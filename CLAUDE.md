@@ -206,8 +206,10 @@ running when unfocused.
 ## Keys (focus mode on at launch; Ctrl+Shift+A toggles it)
 F1 is the key help (below). Arrows navigate, Tab/Shift+Tab cycle control groups (always wrapping),
 Enter activates, Backspace is the secondary action, Escape backs out (a page's Back button on the
-title scene), Home/End jump, Alt+Up/Down jump sections, Left/Right adjust a slider or a stepper (the
-tip, the font), typing letters searches the focused group. Ctrl+arrows review the buffers (below).
+title scene), Home/End jump to the ends (of a horizontal row when focus is in one: the board's first
+and last column, `GraphNode.InRow`; of the stop otherwise), Alt+Up/Down jump sections, Left/Right
+adjust a slider or a stepper (the tip, the font), typing letters searches the focused group (on the
+round, letters are the game's typing instead). Delete is the focused thing's removal (`ui.delete`). Ctrl+arrows review the buffers (below).
 Ctrl+Shift+M opens the mod menu (settings, all keys). F6 reloads the module (Debug).
 
 **Key help (F1, `Module/Screens/HelpScreen`, `Core/UI/KeyHelp`)**: the keys that would do something
@@ -299,6 +301,63 @@ as the same press (`TitlePages.Back`).
   each line only illustrates it), then "Got it!", which runs `ShutTutorialScreen` (the first one then
   deals the tiles, `GridManagerScript.ReturnFromTutorial`). Escape presses it too.
 
+- **The round** (`Module/Round/`, `RoundScreen`, a `CompositeScreen` of three stops; active while
+  `Round.OnScreen`: the game's `GamepadControl.currentControlZone` is LetterGrid, or Menu / LetterBag /
+  Tutorial, the panels that open over the grid and return to it, so focus survives them;
+  `KeepStateOnPop` keeps it across the shop). It LENDS THE KEYBOARD (`FocusMode`, `IKeyboardLender`):
+  the device stays enabled and the game's clashing actions are disabled by name (Navigate, Interact,
+  Nav Left/Right, Close Gaps, Submit Tiles, Backspace, Options), so letters type into the game
+  anywhere on the round (`KeyboardControl.OnTextInput`, the game choosing the tile: mandatory, then
+  special, then a copy not just returned), and Shift (ing/ers), 1 and 4 (drawers), 2 Shuffle (hold:
+  sort), 3 Refresh (held), [ ], 8 (wildcard), = (plus) are the game's own. No type-ahead there.
+  - **Board** (`Round.Board`): the tile grid as drawn (`GridManagerScript.tileHolders`' parent, a
+    GridLayoutGroup of `constraintCount` columns: bonus slots and Shuffle in column 1, letters in
+    2 to 5) plus the tool column ("Grid of Tools": Backspace, Refresh, Bag, Submit, one per row) as
+    column 6; rows share a row key (Up/Down keep the column). A cell is its contents, then "column
+    row", 1-based, row 1 at the top: "C, 3 points, 4 1", "A, 1 point, emerald, 3 3", "E, 1 point, in
+    word, slot 2, 2 4" (a tile in the word leaves a faint copy in its spot), "locked slot, 1 1",
+    "Refresh, 5 left, 6 2", "Letter Bag, 80 tiles, 6 3", "Submit, disabled, 6 4". Tools are told apart
+    by wiring (their scripts share one "Tools" object): Submit is `submissionButton`, Refresh has a
+    `RefreshHelper`, Backspace / Shuffle are their `LongHoldScript.onShortPress` targets, Bag's
+    onClick is `ToggleLetterBagDrawer`. Tool names are the game's (`BonusDescriptions.ShopDescription`
+    titles: Refresh, Shuffle or Sort by `ShuffleTool.defaultIsShuffle`, Letter Bag) or the mod's
+    (Backspace, Submit). Special tiles' and tools' descriptions (the same `ShopDescription`) are the
+    control buffer. Enter on a tile is `TileHolderScript.ControllerInteractTile` (the game's keyboard
+    press: to the word, or back from it, or onto an upgrade in click-to-upgrade mode); on a tool, the
+    tool's own method (`BackspaceButtonClick`, `PressedRefreshButton` without the hold,
+    `ShuffleButtonOnPress`, `PressedSubmitButton`, the bag as `BagScreen`). The first visit lands on
+    the first letter tile.
+  - **Word** (`Round.WordSlots`): the shown submission slots (10, 20 once the tenth fills) as one row:
+    "C, 3 points, slot 3", "slot 5, empty, +5" (the slot's bonus as drawn), "required" on an empty one
+    of the first four (`numberOfTilesRequired`). Enter submits from any slot (`PressedSubmitButton`:
+    its own refusal, "Words Must Have At Least 4 Tiles", comes back through the strip), Delete sends
+    the slot's tile back.
+  - **Status**: the score bar's "0 / 35, 35 Points Left", "ROUND 1 / 10, EASY MODE" (BarScript's
+    `barLabel`, `scoreToGoTMP`, `roundText`, `leftText`, through `LogicManagerScript.scoreBarScript`),
+    "PLAYS: 10" (`lifeBarScript`), refreshes, the bag count, the strip's text while it shows.
+  - **Keys**: Backspace (every round node's secondary) the last tile out (`BackspaceButtonClick`, the
+    game's LIFO list), Shift+Backspace the whole word (`BackspaceButtonHold`), Ctrl+Backspace close
+    gaps (`CloseAllGaps`), Escape the Options drawer (`TopDrawerManager.ToggleOptionsDrawer`).
+  - **Events** (`RoundEvents`): the word row diffed every frame while `Round.Playing` and interaction
+    is on ("C, slot 3" interrupting, "C removed"); Harmony on `KeyboardControl.Update` ("no Z" when a
+    typed letter found no tile), `SubmitWord.SubmitTheWord` (board noted), `WordWasNotAccepted`
+    ("SMOE: not a word"), `ReturnToGame` / `LogicManagerScript.FinishRound` ("BREAD: 13", the score
+    line, "round complete", "new: E, 3 1; T, 4 2; ..." from the board diff, 15 frames on),
+    `LastWordArea.TutorialMessage` and `ShowSpecialRoundText` (the strip), `ShuffleTool.ShuffleTiles` /
+    `SortTilesAlphabetically` ("shuffled" when tiles moved), `RefreshTool.RefreshAllTiles`
+    ("refreshed, 4 left"). Verified live: BREAD typed, submitted, scored 13, five new tiles named.
+  - The driver cannot type into the game: call the private `KeyboardControl.OnTextInput((char)'b')`
+    through `/eval` (the game's own text-input handler), one letter at a time.
+- **Bag** (`Round/BagScreen`, Enter on the Bag tool): `LetterBagManager.LetterBag` and `SpentLetters`
+  (tile id strings: letter, type code S G D P F E T L, two digits of bonus points, two of special
+  score) counted by how they read, "A, 1 point: 6"; a modal, Escape closes. The game's own drawer is
+  not opened.
+- **Options drawer** (`Screens/Game/OptionsDrawerScreen`, open while `TopDrawerManager.optionsDrawer`
+  `drawerIsOut`): the drawer panel's rows through `UI/OptionRows` (shared with the title's options
+  page): Give Up and Quit to Menu (`MoveableButton`s, Sure? listed while out), Report an Issue,
+  Toggle Display Scale, the full-screen switch, Controller Icons, Music, SFX, Show Tooltips, the
+  shuffle default. Escape closes it with the same toggle. Never press a Sure? for the player.
+
 ## Hard rules
 - **All speech through `Speech.Say`** (Core) -> the host `SpeechPipeline`; never call Prism directly.
   Navigation moves interrupt; screen entry and feedback queue.
@@ -325,7 +384,9 @@ drawers, refresh, typing). While focus mode is on, `FocusMode` disables the keyb
 System DEVICE (`InputSystem.DisableDevice`), so no game action hears a key; our own keys are polled
 through the legacy input path, which is unaffected. `InputSystem.onDeviceChange` re-disables a keyboard
 the moment anything enables it again. Turning focus mode off re-enables it. Anything a game hotkey did
-must be offered through our screens instead. A side effect worth knowing: with the keyboard device off
+must be offered through our screens instead. The round is the exception: it lends the keyboard (the
+game's own keys and typing work, its clashing actions disabled by name; see The game scene). A side
+effect worth knowing: with the keyboard device off
 the game never switches `ControlManagerScript.currentControlType` to Keyboard, so its controller arrow
 stays hidden and the mouse cursor shown.
 
@@ -333,13 +394,13 @@ stays hidden and the mouse cursor shown.
 1. **(done)** Loader bring-up on Mono (BepInEx 5), host + per-generation renamed hot reload, Prism,
    the dev server with Roslyn eval.
 2. **(done)** Graph engine + navigator + input substrate + buffers + key help in Core, ported from
-   guildrun with its tests (138); Tab always wraps, no list role, positions off by default.
+   guildrun with its tests (140 now); Tab always wraps, no list role, positions off by default.
 3. **(done)** The title scene: main menu, level select, options, extras, consent.
-4. The round (the `Game` scene): the tile rack, the submission row, the score bar, the word log, the
-   letter bag, the modifiers and upgrades, the shop, the end screens. **Focus mode must change
-   first**: typing a word reads `Keyboard.current.onTextInput`, which a disabled keyboard device never
-   raises, so the round cannot take guildrun's device lock. Likely shape: leave the device enabled
-   and disable the game's PlayerInput actions (or the action maps that clash with ours) instead,
-   letting letter typing reach `KeyboardControl.OnTextInput` while our navigation keys stay ours.
-5. Releases: version in `Directory.Build.props` (`0.0.1`), CHANGELOG, `build_release.ps1`, the
+4. **(done)** The round's core: keyboard lending, the board with coordinates, the word, status,
+   events, the bag, the Options drawer, the tutorial panels.
+5. Next in the round: the shop (between rounds; the game moves its zone to Shop and the round screen
+   steps aside), the Modifier and Upgrade drawers (stops of the round once enabled), click-to-upgrade
+   and the Swap Tile picker, moving a tile within the word, the end screen (`GameOverScreen`), the
+   word log buffer.
+6. Releases: version in `Directory.Build.props` (`0.0.1`), CHANGELOG, `build_release.ps1`, the
    installer, the manual, on guildrun's pattern.

@@ -130,6 +130,80 @@ namespace Earplay.Core.Strings
             // A row of the Extras stats: {0} = the stat's label, {1} = its value.
             D("extras.stat", "{0}: {1}"),
 
+            // The round. Its three stops.
+            D("round.board", "Board"),
+            D("round.word", "Word"),
+            D("round.status", "Status"),
+            // A board cell: what it holds, then its column and row (1-based, row 1 at the top).
+            // {0} = what it holds, {1} = column, {2} = row.
+            D("cell.at", "{0}, {1} {2}"),
+            D("cell.empty", "empty"),
+            D("cell.locked_slot", "locked slot"),
+            // A board tile that is in the word now; {0} = the tile, {1} = its slot.
+            D("cell.in_word", "{0}, in word, slot {1}"),
+            // A tile's points; {0} = the number (one key per form: the strings have no plurals).
+            D("tile.point", "{0} point"),
+            D("tile.points", "{0} points"),
+            // What makes a tile special (the game describes each; these are their short names).
+            D("tile.golden", "golden"),
+            D("tile.diamond", "diamond"),
+            D("tile.diamond_stored", "diamond, {0} stored"),
+            D("tile.emerald", "emerald"),
+            D("tile.potion", "potion"),
+            D("tile.dot", "dot"),
+            D("tile.glass", "glass"),
+            D("tile.locked", "locked"),
+            // A locked tile and the words left on its countdown; {0} = that count.
+            D("tile.locked_count", "locked, {0} words"),
+            D("tile.mandatory", "mandatory"),
+            D("tile.stuck", "stuck"),
+            // The odd tiles, which have no letter to read.
+            D("tile.wildcard", "wildcard"),
+            D("tile.plus", "plus"),
+            D("tile.exclamation", "exclamation"),
+            D("tile.mirror", "mirror"),
+            // The tools the game names nowhere (Refresh, Shuffle, Sort, Letter Bag take the game's).
+            D("tool.backspace", "Backspace"),
+            D("tool.submit", "Submit"),
+            D("tool.refresh", "Refresh"),
+            D("tool.shuffle", "Shuffle"),
+            D("tool.sort", "Sort"),
+            D("tool.bag", "Letter Bag"),
+            // {0} = refreshes left / tiles in the bag.
+            D("tool.refreshes_left", "{0} left"),
+            D("tool.bag_tiles", "{0} tiles"),
+            // A word slot; {0} = its number, 1-based.
+            D("slot", "slot {0}"),
+            // {0} = the tile, {1} = the slot number.
+            D("slot.with_tile", "{0}, slot {1}"),
+            D("slot.required", "required"),
+            // A status line: {0} = its label, {1} = its value ("PLAYS: 10").
+            D("status.pair", "{0}: {1}"),
+            D("status.plays", "Plays"),
+            // As it happens. {0} = a tile ("C").
+            D("event.removed", "{0} removed"),
+            D("event.no_tile", "no {0}"),
+            D("event.cleared", "word cleared"),
+            // {0} = the word as it stands after the gaps close.
+            D("event.gaps_closed", "gaps closed, {0}"),
+            // {0} = the word; {1} = its score.
+            D("event.scored", "{0}: {1}"),
+            // {0} = the word the game refused.
+            D("event.rejected", "{0}: not a word"),
+            D("event.round_complete", "round complete"),
+            // The tiles a word's refill dealt; {0} = each with its coordinates, "E, 2 1; S, 3 2".
+            D("event.new_tiles", "new: {0}"),
+            D("event.shuffled", "shuffled"),
+            D("event.sorted", "sorted"),
+            // {0} = refreshes left.
+            D("event.refreshed", "refreshed, {0} left"),
+            // The letter bag: {0} = how many tiles.
+            D("bag.remaining", "in the bag, {0}"),
+            D("bag.spent", "spent this round, {0}"),
+            D("bind.round.clear", "Clear the word"),
+            D("bind.round.closegaps", "Close gaps"),
+            D("bind.ui.delete", "Return the tile to the board"),
+
             // The mod's own menu (Ctrl+Shift+M).
             D("screen.mod_menu", "Earplay"),
             D("mod.settings", "Settings"),
@@ -315,6 +389,55 @@ namespace Earplay.Core.Strings
             => Has("bind." + actionKey) ? Get("bind." + actionKey) : fallback;
 
         public static string ScreenMainMenu => Get("screen.main_menu");
+        public static string RoundBoard => Get("round.board");
+        public static string RoundWord => Get("round.word");
+        public static string RoundStatus => Get("round.status");
+        public static string CellAt(string what, int column, int row) => F("cell.at", what, column, row);
+        public static string CellEmpty => Get("cell.empty");
+        public static string CellLockedSlot => Get("cell.locked_slot");
+        public static string TileInWord(string tile, int slot) => F("cell.in_word", tile, slot);
+        public static string Points(int n) => F(n == 1 ? "tile.point" : "tile.points", n);
+        public static string TileGolden => Get("tile.golden");
+        public static string TileDiamond => Get("tile.diamond");
+        public static string TileDiamondStored(int n) => F("tile.diamond_stored", n);
+        public static string TileEmerald => Get("tile.emerald");
+        public static string TilePotion => Get("tile.potion");
+        public static string TileDot => Get("tile.dot");
+        public static string TileGlass => Get("tile.glass");
+        public static string TileLockedPlain => Get("tile.locked");
+        public static string TileLocked(int words) => F("tile.locked_count", words);
+        public static string TileMandatory => Get("tile.mandatory");
+        public static string TileStuck => Get("tile.stuck");
+        public static string TileWildcard => Get("tile.wildcard");
+        public static string TilePlus => Get("tile.plus");
+        public static string TileExclamation => Get("tile.exclamation");
+        public static string TileMirror => Get("tile.mirror");
+        public static string ToolBackspace => Get("tool.backspace");
+        public static string ToolSubmit => Get("tool.submit");
+        public static string ToolRefresh => Get("tool.refresh");
+        public static string ToolShuffle => Get("tool.shuffle");
+        public static string ToolSort => Get("tool.sort");
+        public static string ToolBag => Get("tool.bag");
+        public static string RefreshesLeft(int n) => F("tool.refreshes_left", n);
+        public static string BagTiles(int n) => F("tool.bag_tiles", n);
+        public static string Slot(int n) => F("slot", n);
+        public static string SlotWithTile(string tile, int n) => F("slot.with_tile", tile, n);
+        public static string SlotRequired => Get("slot.required");
+        public static string StatusPair(string label, string value) => F("status.pair", label, value);
+        public static string StatusPlays => Get("status.plays");
+        public static string TileRemoved(string tile) => F("event.removed", tile);
+        public static string NoTile(string letter) => F("event.no_tile", letter);
+        public static string WordCleared => Get("event.cleared");
+        public static string GapsClosed(string word) => F("event.gaps_closed", word);
+        public static string WordScored(string word, int score) => F("event.scored", word, score);
+        public static string WordRejected(string word) => F("event.rejected", word);
+        public static string RoundComplete => Get("event.round_complete");
+        public static string NewTiles(string list) => F("event.new_tiles", list);
+        public static string Shuffled => Get("event.shuffled");
+        public static string Sorted => Get("event.sorted");
+        public static string Refreshed(int left) => F("event.refreshed", left);
+        public static string BagRemaining(int n) => F("bag.remaining", n);
+        public static string BagSpent(int n) => F("bag.spent", n);
         public static string ScreenLevelSelect => Get("screen.level_select");
         public static string ScreenConsent => Get("screen.consent");
         public static string ScreenExtras => Get("screen.extras");

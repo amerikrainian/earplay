@@ -115,6 +115,11 @@ namespace Earplay.Module
             InputManager.Register(UiActions.End, "Jump to last", InputCategory.UI).AddBinding(new KeyboardBinding(KeyCode.End));
             InputManager.Register(UiActions.RegionPrev, "Previous section", InputCategory.UI).AddBinding(new KeyboardBinding(KeyCode.UpArrow, alt: true));
             InputManager.Register(UiActions.RegionNext, "Next section", InputCategory.UI).AddBinding(new KeyboardBinding(KeyCode.DownArrow, alt: true));
+            // Delete: the focused thing's removal (a word slot's tile back to the board).
+            InputManager.Register(UiActions.Delete, "Return the tile to the board", InputCategory.UI).AddBinding(new KeyboardBinding(KeyCode.Delete));
+            // The round's word keys, answered by the round screen alone (no handler here).
+            InputManager.Register(Round.RoundScreen.ClearAction, "Clear the word", InputCategory.UI).AddBinding(new KeyboardBinding(KeyCode.Backspace, shift: true));
+            InputManager.Register(Round.RoundScreen.CloseGapsAction, "Close gaps", InputCategory.UI).AddBinding(new KeyboardBinding(KeyCode.Backspace, ctrl: true));
             // Buffer review, the Harkest Dungeon keys: Ctrl+Left/Right switch buffers, Ctrl+Up/Down step lines.
             Buffers.Init();
             InputManager.Register("buffer.next", "Next buffer", InputCategory.UI, Buffers.Controls.NextBuffer).AddBinding(new KeyboardBinding(KeyCode.RightArrow, ctrl: true));
@@ -146,7 +151,10 @@ namespace Earplay.Module
             ScreenManager.Register(new Screens.Title.OptionsScreen());
             ScreenManager.Register(new Screens.Title.ExtrasScreen());
             ScreenManager.Register(new Screens.Title.ConsentScreen());
-            // The round's modal panels.
+            // The round, and its modal panels over it.
+            ScreenManager.Register(new Round.RoundScreen());
+            ScreenManager.Register(new Round.BagScreen());
+            ScreenManager.Register(new Screens.Game.OptionsDrawerScreen());
             ScreenManager.Register(new Screens.Game.TutorialScreen());
             ScreenManager.Register(new ModMenuScreen());
             ScreenManager.Register(new HelpScreen());
@@ -164,6 +172,7 @@ namespace Earplay.Module
             InputManager.Tick();
             ScreenManager.Tick();
             if (!TextEdit.OwnsKeyboard) Navigation.TickTypeahead();
+            Safe(Round.RoundEvents.Tick, "round events");
             Safe(Later.Tick, "later");
             Safe(Buffers.Tick, "buffers");
         }
