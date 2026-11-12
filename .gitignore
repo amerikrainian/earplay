@@ -1,0 +1,17 @@
+# The decompiled game reference (game/decompiled, game/analysis): regenerated locally with
+# `uv run python tools/python/dump_game.py`, never committed.
+/game/
+
+# Build output
+bin/
+obj/
+*.user
+.vs/
+
+# Machine-specific build overrides
+Directory.Build.local.props
+
+# Release artifacts
+releases/
+
+tools/python/__pycache__/
