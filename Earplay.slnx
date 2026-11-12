@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="src/Earplay.Contracts/Earplay.Contracts.csproj" />
+  <Project Path="src/Earplay.Core/Earplay.Core.csproj" />
+  <Project Path="src/Earplay.Module/Earplay.Module.csproj" />
+  <Project Path="src/Earplay/Earplay.csproj" />
+  <Project Path="src/Earplay.Tests/Earplay.Tests.csproj" />
+</Solution>

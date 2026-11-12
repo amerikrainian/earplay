@@ -1,0 +1,86 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The BepInEx 5 plugin: the PERMANENT host. Engine + native glue only: the plugin entry, the Prism
+    P/Invoke speech backend, the pump MonoBehaviour, the module loader (which loads Core + Module from
+    their bytes, renamed per generation), and the settings store. References BepInEx 5 + Harmony + Mono.Cecil, the game's Unity assemblies (Directory.Build.props),
+    and Contracts. NEVER references Core or Module at compile time (a compile-time reference would load
+    Core by name into the AppDomain and break the per-generation identity split). Targets
+    netstandard2.1, the profile the game itself is built against (Unity 2022.3 Mono).
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>Earplay</AssemblyName>
+    <RootNamespace>Earplay</RootNamespace>
+    <Nullable>disable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>$(NoWarn);CS0436</NoWarn>
+  </PropertyGroup>
+
+  <!-- The mod version lives in Directory.Build.props alone; this generates the BuildVersion constant. -->
+  <Target Name="GenerateBuildVersion" BeforeTargets="BeforeCompile">
+    <PropertyGroup>
+      <_BuildVersionFile>$(IntermediateOutputPath)BuildVersion.g.cs</_BuildVersionFile>
+    </PropertyGroup>
+    <ItemGroup>
+      <_BuildVersionLine Include="namespace Earplay" />
+      <_BuildVersionLine Include="{" />
+      <_BuildVersionLine Include="    internal static class BuildVersion" />
+      <_BuildVersionLine Include="    {" />
+      <_BuildVersionLine Include='        public const string Value = "$(Version)"%3B' />
+      <_BuildVersionLine Include="    }" />
+      <_BuildVersionLine Include="}" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(_BuildVersionFile)" Lines="@(_BuildVersionLine)"
+                      Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <Compile Include="$(_BuildVersionFile)" />
+      <FileWrites Include="$(_BuildVersionFile)" />
+    </ItemGroup>
+  </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Earplay.Contracts\Earplay.Contracts.csproj" />
+    <!-- The reloadable side. ReferenceOutputAssembly=false: the host loads these by hand (from their
+         bytes) and never references their types at compile time; these entries only force them to
+         build before the host so DeployToGame can copy their DLLs. -->
+    <ProjectReference Include="..\Earplay.Module\Earplay.Module.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Private>false</Private>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The per-generation rename of the reloadable pair (BepInEx ships Cecil). -->
+    <Reference Include="$(BepInExDir)\core\Mono.Cecil.dll" Private="false" />
+  </ItemGroup>
+
+  <!--
+    Auto-deploy on build (Debug only): copy the host + Contracts + Roslyn deps (everything in the output)
+    plus the Core and Module DLLs and PDBs into BepInEx/plugins/Earplay, and prism.dll next to
+    Word Play.exe. ContinueOnError keeps a locked file (game running) a warning; close the game and
+    rebuild to deploy the host. Core and Module are overwrite-safe at runtime (byte-loaded, never
+    locked); the chainloader skips them since they carry no [BepInPlugin].
+  -->
+  <Target Name="DeployToGame" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">
+    <PropertyGroup>
+      <CoreOut>$(RepoRoot)src\Earplay.Core\bin\$(Configuration)\netstandard2.0\</CoreOut>
+      <ModuleOut>$(RepoRoot)src\Earplay.Module\bin\$(Configuration)\netstandard2.1\</ModuleOut>
+    </PropertyGroup>
+    <ItemGroup>
+      <_DeployDll Include="$(TargetDir)*.dll;$(TargetDir)Earplay.pdb;$(TargetDir)Earplay.Contracts.pdb" />
+      <_Reloadable Include="$(CoreOut)Earplay.Core.dll;$(CoreOut)Earplay.Core.pdb;$(ModuleOut)Earplay.Module.dll;$(ModuleOut)Earplay.Module.pdb" />
+      <_LangFile Include="$(RepoRoot)lang\*.txt" />
+    </ItemGroup>
+    <MakeDir Directories="$(PluginDeployDir)" />
+    <Copy SourceFiles="@(_DeployDll)" DestinationFolder="$(PluginDeployDir)" SkipUnchangedFiles="true"
+          ContinueOnError="true" Retries="0" />
+    <Copy SourceFiles="@(_Reloadable)" DestinationFolder="$(PluginDeployDir)" ContinueOnError="true" />
+    <Copy SourceFiles="$(RepoRoot)third_party\prism\prism.dll"
+          DestinationFolder="$(GameDir)" SkipUnchangedFiles="true" ContinueOnError="true" />
+    <Copy SourceFiles="@(_LangFile)" DestinationFolder="$(PluginDeployDir)\lang"
+          SkipUnchangedFiles="true" ContinueOnError="true" Condition="'@(_LangFile)' != ''" />
+    <Message Importance="high" Text="Earplay deployed -> $(PluginDeployDir)" />
+  </Target>
+
+</Project>
