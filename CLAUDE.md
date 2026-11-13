@@ -90,9 +90,23 @@ in-game (`GET /module` shows the generation and the DLL write times, so a stale 
   `curl -s --retry 40 --retry-connrefused --retry-delay 2 --retry-all-errors http://127.0.0.1:8772/health`.
 - Tests: `dotnet test src/Earplay.Tests/Earplay.Tests.csproj` (Core + Contracts; no game).
 - Release: `dotnet build -c Release` compiles without deploying, and without the dev server (its
-  sources are excluded and Roslyn is not referenced). Release packaging, the installer and the
-  manual are not ported yet; guildrun's `build_release.ps1`, `installer\` and `docs_src\` are the
-  pattern when the first release is due.
+  sources are excluded and Roslyn is not referenced). Packaging, ported from guildrun (no manual yet:
+  guildrun's `docs_src\` mdbook is the pattern when one is due):
+  - `build_release.ps1`: the Release build, then `releases\Earplay-v<Version>.zip`, whose root is the
+    game folder: the vendored BepInEx 5 (`winhttp.dll`, `doorstop_config.ini`, `.doorstop_version`,
+    `BepInEx\core`), a `BepInEx.cfg` with the console off, `prism.dll`, and
+    `BepInEx\plugins\Earplay` (the four mod DLLs, `lang\*.txt`). Version from `Directory.Build.props`.
+  - `build-installer.ps1`: `installer\` (Rust + wxWidgets, from the Non-Visual Calculus installer;
+    needs cargo, libclang and ninja, probed from Visual Studio) to `releases\EarplayInstaller.exe`.
+    It finds the game (`WORDPLAY_DIR`, Steam libraries; markers `Word Play.exe` and
+    `Word Play_Data\Managed\Assembly-CSharp.dll`), downloads the newest `Earplay-vX.Y.Z.zip` from
+    `amerikrainian/earplay`'s releases, records what it wrote in
+    `BepInEx\config\Earplay\install.json`, backs up what it overwrote, and uninstalls from that.
+    `--cli` gives a console version; `cargo run --release --example cli` runs it without the UAC
+    prompt, and `EARPLAY_INSTALLER_RELEASES_URL` points it at a local feed for an end-to-end test.
+  - `test-installer.ps1`: the installer's `cargo test`.
+  - `create-release.ps1 vX.Y.Z`: for a pushed tag, `gh release create` with the zip and the
+    installer, the notes from the tag's `## VX.Y.Z` section of `changelog.md`.
 
 ## Logs
 Our lines go through the BepInEx logger with an `[Earplay]` source into
@@ -525,5 +539,6 @@ stays hidden and the mouse cursor shown.
    steps aside), the Modifier and Upgrade drawers (stops of the round once enabled), click-to-upgrade
    and the Swap Tile picker, moving a tile within the word, the end screen (`GameOverScreen`), the
    word log buffer.
-6. Releases: version in `Directory.Build.props` (`0.0.1`), CHANGELOG, `build_release.ps1`, the
-   installer, the manual, on guildrun's pattern.
+6. Releases: version in `Directory.Build.props` (`0.0.1`), `changelog.md`, the release zip, the
+   installer and the GitHub release script are done (see Build & deploy); the manual is still to
+   come.

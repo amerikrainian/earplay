@@ -11,7 +11,10 @@ obj/
 # Machine-specific build overrides
 Directory.Build.local.props
 
-# Release artifacts
+# Release artifacts (build_release.ps1, build-installer.ps1)
 releases/
 
 tools/python/__pycache__/
+
+# The installer's cargo output (build-installer.ps1)
+installer/target/
