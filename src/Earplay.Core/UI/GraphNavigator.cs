@@ -228,8 +228,11 @@ namespace Earplay.Core.UI
                 if (!_graph.Rerender()) return; // no content yet: Reconcile will seat the start node once there is
                 // Declared initial landing: seat the stop's landing node (remembered, selected member,
                 // first), BEFORE the differ announces below.
+                var first = Screen.InitialFocusNode;
                 var stop = Screen.InitialFocusStop;
-                if (stop != null)
+                if (first != null && _graph.Current.Nodes.ContainsKey(first))
+                    _graph.Focus(first);
+                else if (stop != null)
                 {
                     var land = KeyGraph.StopLanding(_graph.Current, _graph.State, stop);
                     if (land != null) _graph.Focus(land.Id);

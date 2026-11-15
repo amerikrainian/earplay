@@ -44,6 +44,10 @@ namespace Earplay.Core.Screens
         /// graph's start node.</summary>
         public virtual object InitialFocusStop => null;
 
+        /// <summary>The node initial focus lands on when the screen first gains a cursor, when it is in
+        /// the render (before <see cref="InitialFocusStop"/>). Null = the stop's landing.</summary>
+        public virtual Graph.ControlId InitialFocusNode => null;
+
         /// <summary>Spoken when the screen gains focus. Null/empty = silent.</summary>
         public virtual string ScreenName => null;
 

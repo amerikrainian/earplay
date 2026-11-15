@@ -439,7 +439,9 @@ as the same press (`TitlePages.Back`).
   (`allFilledGO`); the card's `additionalDescription` text is the control buffer; Enter buys
   (`myButton` -> `BuyThisCard`). Then Re-Roll and Skip as drawn, caption then cost ("Re-Roll, -1
   Plays": the "Left Text" first; `reRollButtonText` is the COST text), the letter bag (`BagScreen`),
-  Peek, the plays line. A re-roll reads the new cards 40 frames on. Not a keyboard lender: the game's
+  Peek, the plays line. A re-roll reads the new cards 40 frames on. Each shop opens on the first
+  card (`InitialFocusNode`); focus is kept only across a peek (`KeepStateOnPop` reads `peeking`), so
+  a new shop never opens on the place of the card bought last time. Not a keyboard lender: the game's
   keys are off in the shop.
 - **Peek** (`Round/PeekScreen`, while the shop is showing and `ShopManager.peeking`): the shop's
   Peek (`TogglePeek`, a fade of the shop's canvas; the zone stays Shop) shows the board, read by the

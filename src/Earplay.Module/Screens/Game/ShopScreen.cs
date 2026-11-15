@@ -29,8 +29,12 @@ namespace Earplay.Module.Screens.Game
     public sealed class ShopScreen : Screen
     {
         public override string Key => "game.shop";
-        // A peek steps the shop aside: back from it, focus is where it was (on Peek).
-        public override bool KeepStateOnPop => true;
+        // A peek steps the shop aside: back from it, focus is where it was (on Peek). Closing the shop
+        // for the next round drops it, so the next shop starts on its first card, not on the place of
+        // the card bought last time (read at pop time: TogglePeek sets peeking before the shop steps aside).
+        public override bool KeepStateOnPop => ShopManager.Instance != null && ShopManager.Instance.peeking;
+        // A fresh shop lands on its first card (the plays line above it is one Up away).
+        public override ControlId InitialFocusNode => ControlId.Structural("shop:card0");
 
         private static ShopManager Shop()
         {
