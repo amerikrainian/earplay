@@ -13,8 +13,8 @@ namespace Earplay.Module.Screens.Title
     /// <summary>
     /// The Extras page: the Stats panel (Total Words Spelled, Longest Ever Word, Highest-Scoring Word,
     /// Games Won), each row its label and its value as one line, an empty value (nothing spelled yet)
-    /// read as blank; the Credits panel line by line; then Back. Each panel is a stop named by its own
-    /// title. Escape presses Back.
+    /// read as blank; the Credits panel line by line. Each panel is a stop named by its own title and
+    /// ends with Back (the page's one button, under both). Escape presses Back.
     /// </summary>
     public sealed class ExtrasScreen : Screen
     {
@@ -33,6 +33,7 @@ namespace Earplay.Module.Screens.Title
         {
             var page = Page();
             if (page == null) return;
+            var back = TitlePages.BackButton(page);
             var panels = page.transform.Find("Panels");
             if (panels != null)
             {
@@ -46,11 +47,11 @@ namespace Earplay.Module.Screens.Title
                     var stats = panel.Find("Stat Area");
                     if (stats != null) AddStats(b, stats);
                     else AddLines(b, panel, title);
+                    // Back closes each panel, so it is never a stop of its own.
+                    TitlePages.AddButton(b, "extras:back:" + panel.name, back);
                     b.PopContext();
                 }
             }
-            b.BeginStop("extras:back");
-            TitlePages.AddButton(b, "extras:back", TitlePages.BackButton(page));
         }
 
         // One line per stat row: "Games Won: 0". The highest-scoring word's row has two values (the

@@ -305,8 +305,8 @@ as the same press (`TitlePages.Back`).
   tiles are a preview and are left out. More...: Report an Issue (opens the studio's page in the
   browser) and Delete Save, whose press slides out Sure? (`MoveableButton`, listed while
   `sureShowing`). Sure? runs `DeleteAllSaveData`.
-- **Extras** (`ExtrasScreen`): Stats ("Games Won: 0", one line per row, an empty value read blank),
-  Credits line by line, Back.
+- **Extras** (`ExtrasScreen`): two stops, Stats ("Games Won: 0", one line per row, an empty value
+  read blank) and Credits line by line, each ending with Back (the page's one button, not a stop).
 - **Consent** (`ConsentScreen`): the analytics message line by line, No Thanks, Okay!. Never pressed
   for the player.
 
