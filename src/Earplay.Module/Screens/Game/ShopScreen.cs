@@ -67,7 +67,7 @@ namespace Earplay.Module.Screens.Game
                 b.EndRow();
             }
 
-            AddLabelled(b, "shop:reroll", Private.Get<Button>(shop, "buttonReRoll"), shop.reRollButtonText, () => Later.Frames(40, () => SayCards(), "reroll"));
+            AddLabelled(b, "shop:reroll", Private.Get<Button>(shop, "buttonReRoll"), shop.reRollButtonText, () => SayCardsWhenDealt(DealTries));
             AddLabelled(b, "shop:skip", Private.Get<Button>(shop, "buttonSkip"), shop.skipButtonText, null);
             b.AddItem(ControlId.Structural("shop:bag"), GameNodes.Button(() => Strings.ToolBag, BagScreen.Open));
             b.AddItem(ControlId.Structural("shop:peek"), GameNodes.Button(() => Strings.ShopPeek, () =>
@@ -170,6 +170,45 @@ namespace Earplay.Module.Screens.Game
                 button.onClick.Invoke();
                 after?.Invoke();
             }, () => button.interactable));
+        }
+
+        // A re-roll picks the new cards at once (BonusStore.nextThreeUpgrades), then SpinCards turns
+        // them over one at a time, half a second apart, each filled mid-spin (FillInDetails sets its
+        // associatedBonus): read them once every shown card holds the one dealt to it.
+        private const int DealTries = 120; // 3 frames apart: about six seconds at 60fps
+
+        private static void SayCardsWhenDealt(int tries)
+        {
+            var shop = Shop();
+            if (shop == null) return;
+            if (!Dealt(shop))
+            {
+                if (tries > 0)
+                {
+                    Later.Frames(3, () => SayCardsWhenDealt(tries - 1), "reroll");
+                    return;
+                }
+                CoreLog.Warning("shop: re-rolled cards still not dealt after waiting; reading them as they are");
+            }
+            SayCards();
+        }
+
+        private static bool Dealt(ShopManager shop)
+        {
+            var store = BonusStore.Instance;
+            if (store == null || store.nextThreeUpgrades == null)
+            {
+                CoreLog.Warning("shop: no BonusStore to check the re-rolled cards against");
+                return true;
+            }
+            var next = store.nextThreeUpgrades;
+            for (int i = 0; i < next.Count && i < shop.upgradeCards.Count; i++)
+            {
+                var card = shop.upgradeCards[i];
+                if (card != null && card.gameObject.activeInHierarchy && !ReferenceEquals(card.associatedBonus, next[i]))
+                    return false;
+            }
+            return true;
         }
 
         // After a re-roll: the new cards, one line.

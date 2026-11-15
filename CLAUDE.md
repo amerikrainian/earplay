@@ -439,7 +439,8 @@ as the same press (`TitlePages.Back`).
   (`allFilledGO`); the card's `additionalDescription` text is the control buffer; Enter buys
   (`myButton` -> `BuyThisCard`). Then Re-Roll and Skip as drawn, caption then cost ("Re-Roll, -1
   Plays": the "Left Text" first; `reRollButtonText` is the COST text), the letter bag (`BagScreen`),
-  Peek, the plays line. A re-roll reads the new cards 40 frames on. Each shop opens on the first
+  Peek, the plays line. A re-roll reads the new cards once each shown card holds the one dealt to it
+  (`BonusStore.nextThreeUpgrades[i]`: `SpinCards` fills them one at a time, half a second apart). Each shop opens on the first
   card (`InitialFocusNode`); focus is kept only across a peek (`KeepStateOnPop` reads `peeking`), so
   a new shop never opens on the place of the card bought last time. Not a keyboard lender: the game's
   keys are off in the shop.
